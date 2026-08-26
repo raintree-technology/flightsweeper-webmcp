@@ -81,6 +81,8 @@ test("the public document declares identity, discovery, and truthful example sta
   assert.match(document, /Example agent run/);
   assert.match(document, /href="\.\/terms\.html">Terms<\/a>/);
   assert.match(document, /href="\.\/privacy\.html">Privacy<\/a>/);
+  assert.match(document, /Selecting “Create a flight mission,”[\s\S]*?means you agree to the/);
+  assert.match(document, /acknowledge the <a href="\.\/privacy\.html">Privacy Policy<\/a>/);
   assert.doesNotMatch(document, /> Live sandbox</);
 });
 
@@ -95,15 +97,20 @@ test("public legal pages are scoped to the sandbox and identify the operator", (
     assert.match(document, /href="\.\/privacy\.html"/);
   }
   assert.match(terms, /cannot charge a card, create an airline order/i);
+  assert.match(terms, /name="legal-version" content="terms-2026-08-26\.1"/);
   assert.match(terms, /CST 2172984-70/);
   assert.match(terms, /Registration as a seller of travel does not constitute approval by the State of California/);
   assert.match(privacy, /flightsweeper\.webmcp\.challenge\.v1/);
+  assert.match(privacy, /name="legal-version" content="privacy-2026-08-26\.1"/);
   assert.match(privacy, /Vercel may process ordinary network and device metadata/);
   assert.match(privacy, /do not sell personal information/i);
+  assert.match(privacy, /Do Not Track and Global Privacy Control/);
+  assert.match(privacy, /authorized agent may submit a request on your behalf/i);
+  assert.match(privacy, /conspicuous notice on the challenge homepage for a material change/i);
 });
 
 test("public governance documents preserve the challenge trust boundary", () => {
-  const requiredDocuments = ["README.md", "SECURITY.md", "PRIVACY.md", "CONTRIBUTING.md", "STANDARDS.md", "ASSET_PROVENANCE.md", "RELEASE_CHECKLIST.md"];
+  const requiredDocuments = ["README.md", "SECURITY.md", "PRIVACY.md", "CONTRIBUTING.md", "STANDARDS.md", "LEGAL_REVIEW.md", "ASSET_PROVENANCE.md", "RELEASE_CHECKLIST.md"];
   for (const path of requiredDocuments) {
     assert.doesNotThrow(() => readFileSync(new URL(`./${path}`, import.meta.url), "utf8"), path);
   }
