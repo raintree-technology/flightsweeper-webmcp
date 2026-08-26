@@ -87,6 +87,8 @@ See [SUBMISSION.md](SUBMISSION.md) for the Devpost description and demo sequence
 - [Release and accessibility checklist](RELEASE_CHECKLIST.md)
 - [Raintree standards application](STANDARDS.md)
 - [Challenge data and privacy](PRIVACY.md)
+- [Public Terms of Use](https://flightsweeper-webmcp.vercel.app/terms)
+- [Public Privacy Policy](https://flightsweeper-webmcp.vercel.app/privacy)
 - [Security policy](SECURITY.md)
 
 The accessibility target for the challenge is WCAG 2.2 Level AA in current ChatGPT desktop and Chrome 149+, with keyboard, screen-reader semantics, 200% zoom, mobile reflow, visible focus, and reduced-motion behavior included in the release checklist. See the checklist for the verified and still-manual acceptance gates.

@@ -13,6 +13,7 @@ This is a static, public, dependency-free sandbox. The failure boundary is limit
 - [x] Secret scan reports no credentials or private data.
 - [x] Deployment configuration requires HTTPS transport security, CSP, a least-capability Permissions Policy, `Referrer-Policy`, and `X-Content-Type-Options`.
 - [x] Public privacy, security, contributor, provenance, and standards-boundary documents are present and contract-tested.
+- [x] Public challenge Terms and Privacy pages are linked, sandbox-scoped, and identify FinSync LLC and the California seller-of-travel disclosure.
 
 ## Manual accessibility target — WCAG 2.2 AA
 

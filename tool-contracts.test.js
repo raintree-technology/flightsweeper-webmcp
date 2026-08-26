@@ -79,8 +79,27 @@ test("the public document declares identity, discovery, and truthful example sta
   assert.match(document, /property="og:title"/);
   assert.match(document, /name="robots" content="index,follow,max-image-preview:large"/);
   assert.match(document, /Example agent run/);
-  assert.match(document, />Challenge privacy<\/a>/);
+  assert.match(document, /href="\.\/terms\.html">Terms<\/a>/);
+  assert.match(document, /href="\.\/privacy\.html">Privacy<\/a>/);
   assert.doesNotMatch(document, /> Live sandbox</);
+});
+
+test("public legal pages are scoped to the sandbox and identify the operator", () => {
+  const terms = readFileSync(new URL("./terms.html", import.meta.url), "utf8");
+  const privacy = readFileSync(new URL("./privacy.html", import.meta.url), "utf8");
+  for (const document of [terms, privacy]) {
+    assert.match(document, /FinSync LLC/);
+    assert.match(document, /legal@raintree\.technology/);
+    assert.match(document, /August 26, 2026/);
+    assert.match(document, /href="\.\/terms\.html"/);
+    assert.match(document, /href="\.\/privacy\.html"/);
+  }
+  assert.match(terms, /cannot charge a card, create an airline order/i);
+  assert.match(terms, /CST 2172984-70/);
+  assert.match(terms, /Registration as a seller of travel does not constitute approval by the State of California/);
+  assert.match(privacy, /flightsweeper\.webmcp\.challenge\.v1/);
+  assert.match(privacy, /Vercel may process ordinary network and device metadata/);
+  assert.match(privacy, /do not sell personal information/i);
 });
 
 test("public governance documents preserve the challenge trust boundary", () => {

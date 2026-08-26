@@ -76,6 +76,8 @@ h1 { max-width: 760px; margin: 16px 0 0; font-family: Georgia, "Times New Roman"
 h1 em { font-weight: 500; }
 .lede { max-width: 640px; margin: 22px 0 0; color: #4a3a2c; font-size: 18px; line-height: 1.58; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.legal-entry-notice { max-width: 610px; margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.legal-entry-notice a { color: inherit; text-underline-offset: 2px; }
 .hero-button { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
 .hero-button.secondary { border-color: var(--line-strong); background: rgba(255,252,245,.7); }
 .webmcp-status { display: flex; width: min(100%, 540px); align-items: flex-start; gap: 11px; margin-top: 14px; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: rgba(255,252,245,.78); color: var(--muted); }
