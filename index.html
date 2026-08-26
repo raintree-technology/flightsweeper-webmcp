@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Define bounded flight-purchasing authority, then let a browser agent search, evaluate, and execute a safe sandbox booking through WebMCP." />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="theme-color" content="#fbf6ec" />
+    <link rel="canonical" href="https://flightsweeper-webmcp.vercel.app/" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FlightSweeper" />
+    <meta property="og:title" content="Let your agent book flights. Safely. | FlightSweeper" />
+    <meta property="og:description" content="A WebMCP sandbox for bounded, policy-enforced autonomous flight purchasing." />
+    <meta property="og:url" content="https://flightsweeper-webmcp.vercel.app/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Let your agent book flights. Safely. | FlightSweeper" />
+    <meta name="twitter:description" content="A WebMCP sandbox for bounded, policy-enforced autonomous flight purchasing." />
+    <title>Let your agent book flights. Safely. | FlightSweeper</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#mission-editor-title">Skip to mission editor</a>
+    <section class="hero-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="FlightSweeper home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 38 38" role="img"><path d="M6 20.4 31.8 8l-7.2 22.2-5.1-7.1-7.5 5.1 2.4-9.6L6 20.4Z"/><path d="m14.4 18.6 12.3-6.8-7.2 11.3"/></svg>
+          </span>
+          <span>FlightSweeper</span>
+        </a>
+        <nav class="header-nav" aria-label="Challenge navigation">
+          <a href="#mission-editor-title">Mission</a>
+          <a href="#offers-title">Offers</a>
+          <div class="environment"><span></span> Challenge sandbox</div>
+        </nav>
+      </header>
+
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">WebMCP Challenge Edition</p>
+          <h1>Let your agent<br />book flights. <em>Safely.</em></h1>
+          <p class="lede">Set the route, fare rules, and exact spending authority. Your browser agent searches and executes while FlightSweeper independently enforces every limit.</p>
+          <div class="hero-actions">
+            <a class="button primary hero-button" href="#mission-editor-title">Create a flight mission <span aria-hidden="true">→</span></a>
+            <a class="button hero-button secondary" href="https://github.com/raintree-technology/flightsweeper-webmcp">View source</a>
+          </div>
+          <div class="webmcp-status" id="webmcp-status" role="status" aria-live="polite">
+            <span class="webmcp-status-icon" aria-hidden="true"></span>
+            <span><strong id="webmcp-status-title">Checking WebMCP support…</strong><small id="webmcp-status-detail">The manual sandbox remains available in every browser.</small></span>
+          </div>
+        </div>
+
+        <aside class="booking-preview" aria-label="Illustrative autonomous booking flow">
+          <div class="preview-header">
+            <span class="preview-plane" aria-hidden="true">✈</span>
+            <strong>Mission FS-2048</strong>
+            <span class="preview-live"><i></i> Example agent run</span>
+          </div>
+          <div class="preview-body">
+            <div class="preview-route">
+              <div><span>LAX → JFK</span><strong>Nonstop · $684.32</strong></div>
+              <small>Sep 3<br />1 traveler</small>
+            </div>
+            <ol class="preview-steps">
+              <li class="complete"><b>✓</b><span>Mission authority received</span></li>
+              <li class="complete"><b>✓</b><span>Supplier search complete</span></li>
+              <li class="complete"><b>✓</b><span>Fare refreshed</span></li>
+              <li class="active"><b>↻</b><span>Policy evaluation</span></li>
+              <li><b></b><span>Sandbox ticket issued</span></li>
+            </ol>
+            <div class="preview-result"><span>Execution in progress</span><p>FlightSweeper is advancing the transaction within the traveler’s mandate.</p></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="ownership-strip"><strong>FlightSweeper owns the transaction.</strong><span>The agent acts only within your mandate.</span></div>
+
+    <main class="transaction-shell">
+      <section class="transaction-sheet" aria-labelledby="mission-editor-title">
+        <header class="mission-summary">
+          <div class="mission-title-row">
+            <div><p class="eyebrow">Active mandate</p><h2 id="mission-editor-title"><span id="route-title">Los Angeles → New York</span></h2></div>
+            <div class="summary-actions"><span class="status-pill active" id="authority-status">Active</span><button class="button" id="edit-mission-button" type="button" aria-expanded="false" aria-controls="mission-editor-inline">Edit</button></div>
+          </div>
+          <dl class="mandate-list">
+            <div><dt>Departure</dt><dd id="departure-date">Loading…</dd></div>
+            <div><dt>Arrive by</dt><dd id="arrival-limit">7:00 PM local</dd></div>
+            <div><dt>Cabin</dt><dd id="cabin-limit">Economy or premium</dd></div>
+            <div><dt>Connections</dt><dd id="connection-limit">One maximum</dd></div>
+            <div><dt>Fare rule</dt><dd id="fare-rule">Fully refundable</dd></div>
+            <div class="money"><dt>Purchase limit</dt><dd id="purchase-limit">$900.00 USD</dd></div>
+          </dl>
+        </header>
+
+        <section class="mission-editor-inline" id="mission-editor-inline" hidden aria-labelledby="edit-mission-title">
+          <div class="editor-inline-heading"><h3 id="edit-mission-title">Edit mission</h3><div class="editor-actions"><button class="button" id="new-mission-button" type="button">New mission</button><button class="button quiet" id="reset-button" type="button">Reset current</button></div></div>
+          <form class="mission-form" id="mission-form" novalidate>
+          <fieldset class="mission-section">
+            <legend>Trip details</legend>
+            <div class="mission-fields">
+              <label><span>Origin</span><input id="origin-input" name="origin" maxlength="3" pattern="[A-Za-z]{3}" required /></label>
+              <label><span>Destination</span><input id="destination-input" name="destination" maxlength="3" pattern="[A-Za-z]{3}" required /></label>
+              <label><span>Departure</span><input id="date-input" name="departureDate" type="date" required /></label>
+              <label><span>Arrive by</span><input id="arrival-input" name="arriveBefore" type="time" required /></label>
+            </div>
+          </fieldset>
+          <fieldset class="mission-section">
+            <legend>Fare and authority</legend>
+            <div class="mission-fields policy-fields">
+              <label><span>Cabin</span><select id="cabin-input" name="cabin"><option value="economy_and_premium">Economy or premium</option><option value="economy">Economy only</option><option value="premium_economy">Premium economy only</option></select></label>
+              <label><span>Maximum stops</span><select id="stops-input" name="maxStops"><option value="0">Nonstop</option><option value="1">One</option><option value="2">Two</option></select></label>
+              <label><span>Purchase limit (USD)</span><input id="limit-input" name="maxTotal" type="number" min="100" max="5000" step="1" required /></label>
+              <label><span>Execution</span><select id="confirmation-input" name="confirmationMode"><option value="autonomous">Autonomous sandbox purchase</option><option value="confirm_before_purchase">Confirm before purchase</option></select></label>
+            </div>
+          </fieldset>
+          <div class="form-actions">
+            <label class="check-field"><input id="refundable-input" name="refundableOnly" type="checkbox" /><span>Require a fully refundable fare</span></label>
+            <button class="button primary save-mission" type="submit">Save human mandate</button>
+          </div>
+          </form>
+          <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+          <div class="storage-row"><p class="storage-note" id="storage-note">Mission state and receipts stay in this browser.</p><button class="button danger-quiet" id="erase-data-button" type="button">Erase challenge data</button></div>
+        </section>
+
+        <section class="lifecycle" aria-label="Transaction progress">
+          <div class="next-action"><div><strong id="next-action-title">Next: search the sandbox</strong><span id="next-action-detail">Start here when WebMCP is unavailable.</span></div>
+            <span class="status-pill" id="mission-status">Ready</span>
+          </div>
+          <div class="controls" aria-label="Manual demo controls">
+              <button class="button primary" id="search-button" type="button"><span>1</span> Search</button>
+              <button class="button" id="select-button" type="button" disabled><span>2</span> Select eligible</button>
+              <button class="button" id="evaluate-button" type="button" disabled><span>3</span> Evaluate</button>
+              <button class="button" id="purchase-button" type="button" disabled><span>4</span> Purchase</button>
+          </div>
+        </section>
+
+      <section class="offers-panel">
+        <div class="panel-heading">
+          <div><h2 id="offers-title">Offers</h2></div>
+          <p class="offer-count" id="offer-count">No search yet</p>
+        </div>
+        <div class="offers-empty" id="offers-empty">
+          <div><strong>No offers in the workspace yet</strong><p>Search the sandbox to compare policy fit, supplier trust, and total price.</p></div>
+          <button class="button" id="search-empty-button" type="button">Search sandbox offers</button>
+        </div>
+        <div class="offers" id="offers"></div>
+      </section>
+
+      <section class="receipt" id="receipt" hidden></section>
+
+      <section class="transaction-disclosures">
+        <details><summary><span>Activity</span><span>Latest actions</span></summary><ol class="timeline" id="timeline" aria-live="polite"></ol></details>
+        <details><summary><span>Evidence</span><span id="receipt-count">No receipts yet</span></summary><div class="receipt-history" id="receipt-history"><p class="history-empty">Authorization, denial, and ticket receipts persist across reloads and new missions.</p></div></details>
+      </section>
+
+      <footer class="sheet-footer"><div class="authority-actions"><button class="button tighten" id="tighten-button" type="button">Tighten to nonstop</button><button class="button danger" id="revoke-button" type="button">Revoke authority</button></div><p class="fine-print">Sandbox only. No card is charged and no airline order is created.</p></footer>
+      </section>
+    </main>
+
+    <dialog class="confirm-dialog" id="confirm-dialog" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-description">
+      <form method="dialog">
+        <div class="dialog-heading"><span class="dialog-icon" aria-hidden="true">!</span><div><p class="eyebrow">Review action</p><h2 id="confirm-dialog-title">Confirm action</h2></div></div>
+        <p id="confirm-dialog-description"></p>
+        <div class="dialog-actions">
+          <button class="button" value="cancel">Cancel</button>
+          <button class="button primary" id="confirm-dialog-action" value="confirm">Confirm</button>
+        </div>
+      </form>
+    </dialog>
+
+    <footer>
+      <span>FlightSweeper by FinSync LLC · CST 2172984-70 · <a href="https://github.com/raintree-technology/flightsweeper-webmcp/blob/main/PRIVACY.md">Challenge privacy</a></span>
+      <span>Registration as a seller of travel does not constitute approval by the State of California.</span>
+    </footer>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

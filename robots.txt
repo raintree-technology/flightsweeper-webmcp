@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://flightsweeper-webmcp.vercel.app/sitemap.xml
