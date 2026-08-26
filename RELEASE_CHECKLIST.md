@@ -15,6 +15,7 @@ This is a static, public, dependency-free sandbox. The failure boundary is limit
 - [x] Public privacy, security, contributor, provenance, and standards-boundary documents are present and contract-tested.
 - [x] Public challenge Terms and Privacy pages are linked, sandbox-scoped, and identify FinSync LLC and the California seller-of-travel disclosure.
 - [x] Operator supplied California DOJ documents confirming FinSync LLC, CST 2172984-70, valid July 15, 2026 through July 14, 2027; private certificate images are excluded from the public repository.
+- [x] Operator supplied California entity details confirming the March 27, 2025 formation date and the ZenBusiness registered-agent address used on the legal pages.
 - [x] Operator approved publication as challenge-only policies and accepted the unresolved, non-production limits recorded in `LEGAL_REVIEW.md`.
 
 ## Manual accessibility target — WCAG 2.2 AA

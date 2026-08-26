@@ -26,14 +26,15 @@ Private and production FlightSweeper services are excluded. Any real booking, pa
 - Application behavior: `app.js`, `state.js`, `engine.js`, `tool-contracts.js`, and tests.
 - Hosting and browser controls: `vercel.json` and deployed-header verification.
 - Asset and license boundary: `ASSET_PROVENANCE.md` and `LICENSE`.
-- Entity and registration facts: California Department of Justice Seller of Travel acknowledgement dated July 7, 2026, and certificate supplied by the operator. The private source images are intentionally not stored in this public repository.
+- Entity and registration facts: California Department of Justice Seller of Travel acknowledgement dated July 7, 2026; Seller of Travel certificate; and California entity details supplied by the operator. The private source images and records are intentionally not stored in this public repository.
 - California seller-of-travel wording: California Attorney General Seller of Travel guidance and Business and Professions Code section 17550.24.
 - Structural references: Harvey Platform Agreement and Privacy Policy, OpenAI Terms of Use, and Vercel Terms and Privacy Notice. Their language and data classifications were not copied.
 
 ## Operator confirmations and unresolved limits
 
 - The California Department of Justice documents confirm the registrant as FinSync LLC, registration number CST 2172984-70, valid July 15, 2026 through July 14, 2027. Reverify before July 14, 2027 and whenever the registration changes.
-- The certificate does not identify the Raintree Technology DBA. The DBA wording, public contact address, phone, and email remain operator-maintained facts.
+- California entity details confirm FinSync LLC was formed March 27, 2025 and identify ZenBusiness Inc., 2520 Venture Oaks Way, Suite 120, Sacramento, CA 95833 as its registered agent. This matches the public legal contact address in the Terms and Privacy Policy.
+- The certificate and entity details do not identify the Raintree Technology DBA. The DBA wording, phone, and email remain operator-maintained facts.
 - The acknowledgement records an exemption from the passenger-funds trust-account requirement under the stated conditions of Business and Professions Code section 17550.15(j). This static challenge takes no payment. Do not treat the exemption or registration as authorization for FinSync to receive or control passenger funds in a future production flow; that flow requires a separate compliance review against the certificate’s conditions.
 - The $100 liability cap, California governing-law/forum clause, warranty disclaimer, age threshold, acceptable-use remedies, and feedback license have not been approved by counsel.
 - The interaction-point notice is the challenge’s formation method. The site does not maintain a durable, server-side record of individual assent; Git preserves publication versions only.
