@@ -22,6 +22,7 @@ This repository applies the Raintree standards archive as a design and review re
 | `API-CONTRACTS-001`, `003`–`006`, `019`–`021`, `025`, `027`, `031` | Inputs are bounded; lifecycle exposure is explicit; errors are structured; identifiers and cents are precise; idempotency is separate from authorization. | `tool-contracts.js`, `app.js`, contract and engine tests |
 | `FND-CHANGE-001`–`005`, `AGENT-VERIFICATION-001`–`005`, `PRODUCT-DELIVERY-002`, `003`, `006` | The release boundary, recovery, stop conditions, non-goals, automated gates, manual gates, and residual uncertainty are written down. | `README.md`, `RELEASE_CHECKLIST.md`, `AGENT_CONTRACT.md` |
 | `FND-EVIDENCE-001`, `003`–`005`, `ENGINEERING-QUALITY-003`, `006`–`008` | Automated, browser-observed, and still-manual evidence are distinct. Unchecked gates are not described as verified. | tests, `RELEASE_CHECKLIST.md`, `ASSET_PROVENANCE.md` |
+| `LEGAL-PUBLISHED-TERMS-001`–`003`, `007`, `009`–`012`, `017` | The public legal set has an explicit scope, operator, versions, data-flow basis, interaction notice, change process, privacy-signal disclosure, and publication record. | `terms.html`, `privacy.html`, `LEGAL_REVIEW.md`, contract tests |
 
 ## Deliberate limits
 
@@ -30,6 +31,7 @@ This repository applies the Raintree standards archive as a design and review re
 - WCAG 2.2 Level AA is the target, not a certification. Remaining checks are listed in `RELEASE_CHECKLIST.md`.
 - The repository does not adopt the archive's JavaScript toolchain prescription. It stays dependency-free and uses the existing Node test runner.
 - The California seller-of-travel notice is included. No broader legal-compliance review is claimed.
+- The Terms and Privacy Policy are public challenge policies, not attorney-reviewed production travel-sale documents. The site does not retain server-side evidence of individual assent.
 
 ## Change rule
 
