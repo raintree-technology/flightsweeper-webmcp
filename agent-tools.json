@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "1.0.0",
-  "canonicalUrl": "https://flightsweeper-webmcp.vercel.app/agent-tools.json",
-  "generatedFrom": "agent-manifest.js",
-  "note": "The canonical runtime representation is generated and contract-tested from agent-manifest.js."
-}

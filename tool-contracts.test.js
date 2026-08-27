@@ -135,7 +135,8 @@ test("the static application has no outbound data client", () => {
 
 test("deployment configuration constrains browser authority", () => {
   const deployment = JSON.parse(readFileSync(new URL("./vercel.json", import.meta.url), "utf8"));
-  const headers = Object.fromEntries(deployment.headers[0].headers.map(({ key, value }) => [key, value]));
+  const globalHeaderRule = deployment.headers.find(({ source }) => source === "/(.*)");
+  const headers = Object.fromEntries(globalHeaderRule.headers.map(({ key, value }) => [key, value]));
   assert.match(headers["Content-Security-Policy"], /object-src 'none'/);
   assert.match(headers["Content-Security-Policy"], /frame-ancestors 'none'/);
   assert.match(headers["Permissions-Policy"], /tools=\(self\)/);
