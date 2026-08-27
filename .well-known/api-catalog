@@ -1,0 +1,1 @@
+{"linkset":[{"anchor":"https://flightsweeper-webmcp.vercel.app","item":[{"href":"https://flightsweeper-webmcp.vercel.app/mcp","rel":"service","type":"application/json","title":"Public read-only MCP"},{"href":"https://flightsweeper-webmcp.vercel.app/agent-tools.json","rel":"describedby","type":"application/json","title":"Agent tool contracts"}]}]}

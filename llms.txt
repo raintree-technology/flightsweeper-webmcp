@@ -1,0 +1,18 @@
+# FlightSweeper WebMCP Challenge Edition
+
+> A synthetic, browser-local demonstration of bounded agent-operated flight purchasing. It cannot charge a card, contact a supplier, or create a real reservation.
+
+## Primary
+
+- [Challenge workspace](https://flightsweeper-webmcp.vercel.app/): Human and WebMCP interface.
+- [Complete machine-readable page](https://flightsweeper-webmcp.vercel.app/page.md): Scope, capabilities, and safety model.
+- [Agent tool manifest](https://flightsweeper-webmcp.vercel.app/agent-tools.json): Versioned WebMCP and remote MCP contracts.
+
+## Policies
+
+- [Terms](https://flightsweeper-webmcp.vercel.app/terms)
+- [Privacy](https://flightsweeper-webmcp.vercel.app/privacy)
+
+## Optional
+
+- [Source](https://github.com/raintree-technology/flightsweeper-webmcp)

@@ -1,0 +1,1 @@
+{"name":"FlightSweeper public MCP","version":"1.0.0","protocolVersion":"2025-06-18","transport":{"type":"streamable-http","url":"https://flightsweeper-webmcp.vercel.app/mcp"},"authentication":"none","boundary":"Read-only challenge documentation and synthetic fixture metadata. Browser mission state is never exposed."}
