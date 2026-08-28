@@ -1,7 +1,8 @@
 import { toolContracts } from "./tool-contracts.js";
 
 export const SITE_URL = "https://flightsweeper-webmcp.vercel.app";
-export const MCP_VERSION = "2025-06-18";
+export const MCP_VERSION = "2025-11-25";
+export const MCP_VERSIONS = Object.freeze([MCP_VERSION, "2025-06-18"]);
 
 export const remoteTools = Object.freeze([
   {
@@ -51,7 +52,7 @@ export function publicAgentManifest() {
       })),
       lifecycle: "Only tools valid for the current mission state are registered.",
     },
-    mcp: { transport: `${SITE_URL}/mcp`, protocolVersion: MCP_VERSION, tools: remoteTools },
+    mcp: { transport: `${SITE_URL}/mcp`, protocolVersion: MCP_VERSION, protocolVersions: MCP_VERSIONS, tools: remoteTools },
     modified: "2026-08-26",
   };
 }

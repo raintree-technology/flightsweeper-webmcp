@@ -55,6 +55,17 @@ test("tool exposure follows transaction state", () => {
   assert.deepEqual(new Set(activeToolNames(mission)), new Set(["read_flight_mission", "purchase_selected_offer", "get_booking_receipt"]));
 });
 
+test("the clean-state lifecycle makes every declared browser tool reachable", () => {
+  const mission = createMission();
+  const reachable = new Set(activeToolNames(mission));
+  for (const status of ["ready", "offers_ready", "offer_selected", "quote_refreshed", "authorized", "ticketed"]) {
+    mission.status = status;
+    if (status === "ticketed") mission.booking = { id: "booking" };
+    for (const name of activeToolNames(mission)) reachable.add(name);
+  }
+  assert.deepEqual(reachable, new Set(toolContracts.map(({ name }) => name)));
+});
+
 test("the browser entrypoint uses the required WebMCP API", () => {
   const source = readFileSync(new URL("./app.js", import.meta.url), "utf8");
   assert.match(source, /document\.modelContext\.registerTool\(\{/);
