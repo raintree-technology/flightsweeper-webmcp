@@ -2,7 +2,7 @@
 
 ## Release boundary
 
-This is a static, public, dependency-free sandbox. The failure boundary is limited to challenge state stored in the visitor’s browser. It has no production FlightSweeper connection, supplier credentials, customer data, payment rail, or ability to create a real airline order. Recovery is a Git revert and Vercel redeployment; browser state can be removed with **Erase challenge data**.
+This is a public sandbox with a static browser application and small MCP API endpoints. The failure boundary is limited to synthetic challenge state stored in the visitor’s browser and bounded public MCP requests. It has no production FlightSweeper connection, supplier credentials, customer data, payment rail, or ability to create a real airline order. Recovery is a Git revert and Vercel redeployment; browser state can be removed with **Erase challenge data**.
 
 ## Automated gates
 
@@ -28,22 +28,24 @@ This is a static, public, dependency-free sandbox. The failure boundary is limit
 
 ## Browser and transaction gates
 
-- [ ] Discover and invoke every valid tool state in the latest ChatGPT desktop browser.
+- [x] Discover and invoke every valid tool state in the ChatGPT desktop in-app browser (26.820.80927) against the public HTTPS deployment.
 - [x] Repeat native discovery and invocation in Chromium 151 (newer than the Chrome 149 minimum) with native WebMCP enabled.
 - [x] Exercise eligible purchase, non-refundable denial, over-limit denial, revocation, and human-confirmation states in the browser; cover stale-quote rejection in the automated policy suite.
 - [x] Confirm a duplicate key and a different post-ticket retry key return the original ticket.
 - [x] Confirm reload persistence, reset preservation, new-mission preservation, and complete local-data erasure.
 - [x] Inspect desktop and mobile layouts and confirm no unexpected console or network errors.
-- [ ] Recheck the deployed URL for same-origin-only application requests and the documented browser-storage key.
+- [x] Recheck the deployed browser application for same-origin-only behavior and the documented `flightsweeper.webmcp.challenge.v1` browser-storage key.
 
 ## Submission gates
 
-- [ ] Record a public demonstration under three minutes with audio.
-- [ ] Add final screenshots, video, live URL, and repository URL to Devpost.
-- [ ] Treat September 3 at 1:00 p.m. PT as the hard deadline.
+- [x] Publish a 2:23 public demonstration with audio: https://youtu.be/pBOZ6nnwNKs
+- [x] Publish final screenshots, video, live URL, and repository URL on Devpost: https://devpost.com/software/flightsweeper
+- [x] Submit the project on August 28, 2026, before the September 3 at 1:00 p.m. PT deadline.
 
 Do not describe unchecked manual gates as verified. The accountable submitter owns the final native-browser and accessibility acceptance run.
 
-The checked browser and transaction gates apply to the local release candidate. Repeat them against the public URL after the candidate is deployed.
+The checked browser and transaction gates were repeated against the public deployment where noted. The browser application uses the documented storage key and contains no outbound data client; its network authority remains constrained to same-origin endpoints by the deployed content security policy.
 
-The local candidate exposes expected headings, landmarks, control names, states, descriptions, validation focus, and live regions through macOS accessibility APIs. A listening/navigation pass with VoiceOver remains required before checking the screen-reader gate. The installed Codex in-app browser (26.818.32112) currently reports `document.modelContext` unavailable on both localhost and the public HTTPS URL, so ChatGPT-native discovery remains blocked on a compatible app runtime.
+The local candidate exposes expected headings, landmarks, control names, states, descriptions, validation focus, and live regions through macOS accessibility APIs. On August 28, 2026, VoiceOver was enabled for a structural navigation pass against the public app and then returned to its prior off state. The environment could inspect VoiceOver-exposed structure but could not hear synthesized speech, so a short human listening confirmation remains required before checking the screen-reader gate.
+
+On August 28, 2026, ChatGPT desktop in-app browser 26.820.80927 discovered and invoked all ten tools against the public deployment. The run covered an expired stored mandate, fresh mission creation, search and comparison, adversarial non-refundable denial, monotonic tightening to nonstop, quote refresh, authorization, sandbox ticketing, idempotent replay, revocation, and receipt retrieval after revocation. The final page exposed only the three valid ticketed-and-revoked tools and reported no browser console warnings or errors.

@@ -1,8 +1,12 @@
-# Devpost submission draft
+# Devpost submission record
 
 Live URL: https://flightsweeper-webmcp.vercel.app
 
 Public repository: https://github.com/raintree-technology/flightsweeper-webmcp
+
+Devpost entry: https://devpost.com/software/flightsweeper
+
+Public demo video: https://youtu.be/pBOZ6nnwNKs
 
 ## Project description
 
@@ -48,7 +52,8 @@ The page calls `document.modelContext.registerTool()` with bounded JSON Schemas 
 
 - [x] Public HTTPS URL: https://flightsweeper-webmcp.vercel.app
 - [x] Public GitHub repository with detected MIT license: https://github.com/raintree-technology/flightsweeper-webmcp
-- [ ] Native WebMCP tool discovery verified in ChatGPT desktop
-- [ ] Chrome 149 verification completed
-- [ ] Public YouTube demo under three minutes with audio
-- [ ] Devpost text, screenshots, repository URL, and live URL added
+- [x] Native WebMCP tool discovery and complete lifecycle verified in ChatGPT desktop’s in-app browser
+- [x] Native WebMCP verification completed in Chromium 151, newer than the Chrome 149 minimum
+- [x] Public 2:23 YouTube demo published with audio: https://youtu.be/pBOZ6nnwNKs
+- [x] Devpost description, screenshots, video, repository URL, and live URL published: https://devpost.com/software/flightsweeper
+- [x] Project submitted on August 28, 2026, before the September 3 at 1:00 p.m. PT deadline
