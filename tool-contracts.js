@@ -6,6 +6,21 @@ const closedObject = (properties, required = Object.keys(properties)) => ({
 });
 
 const nullable = (schema) => ({ anyOf: [schema, { type: "null" }] });
+const toolNames = [
+  "read_flight_mission",
+  "search_flights",
+  "tighten_flight_mission",
+  "compare_visible_offers",
+  "select_offer",
+  "refresh_selected_offer",
+  "evaluate_purchase",
+  "purchase_selected_offer",
+  "get_booking_receipt",
+  "revoke_purchase_authority",
+];
+const missionStatuses = ["ready", "offers_ready", "offer_selected", "quote_refreshed", "authorized", "denied", "ticketed", "authority_revoked"];
+const missionStatus = { type: "string", enum: missionStatuses };
+const validNextActionsSchema = { type: "array", items: { type: "string", enum: toolNames }, minItems: 1, maxItems: toolNames.length, uniqueItems: true };
 const ruleNames = ["route", "date", "arrival", "cabin", "stops", "refundability", "price", "authority"];
 const ruleName = { type: "string", enum: ruleNames };
 const checksSchema = closedObject(Object.fromEntries(ruleNames.map((name) => [name, { type: "boolean" }])));
@@ -81,7 +96,7 @@ const offerSchema = closedObject({
 const offerEvaluationSchema = closedObject({ offer: offerSchema, evaluation: evaluationSchema });
 const missionSchema = closedObject({
   id: { type: "string", minLength: 1, maxLength: 120 },
-  status: { type: "string", enum: ["ready", "offers_ready", "offer_selected", "quote_refreshed", "authorized", "denied", "ticketed", "authority_revoked"] },
+  status: missionStatus,
   origin: { type: "string", pattern: "^[A-Z]{3}$" },
   destination: { type: "string", pattern: "^[A-Z]{3}$" },
   departureDate: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
@@ -107,13 +122,22 @@ const toolErrorSchema = closedObject({
     retryable: { type: "boolean" },
     nextAction: { type: "string", minLength: 1, maxLength: 300 },
   }),
+  missionStatus,
+  validNextActions: validNextActionsSchema,
 });
-const result = (successSchema) => ({ oneOf: [successSchema, toolErrorSchema] });
+const result = (successSchema) => ({
+  oneOf: [
+    closedObject({ data: successSchema, missionStatus, validNextActions: validNextActionsSchema }),
+    toolErrorSchema,
+  ],
+});
+
+const describes = (intent, dataShape) => `${intent} Returns data as ${dataShape}, plus missionStatus and validNextActions. Failures return a typed error with recovery guidance.`;
 
 export const toolContracts = Object.freeze([
   {
     name: "read_flight_mission",
-    description: "Read the active flight mission, its exact purchasing limits, current state, and safe booking status. Later lifecycle tools, including purchase_selected_offer, are registered only when the stored state makes them valid.",
+    description: describes("Read the active flight mission, its exact purchasing limits, current state, and safe booking status.", "the complete mission object, including mission ID, policy and quote versions, selected offer ID, decision, and booking"),
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     outputSchema: result(missionSchema),
     readOnlyHint: true,
@@ -121,7 +145,7 @@ export const toolContracts = Object.freeze([
   },
   {
     name: "search_flights",
-    description: "Search the exact route, date, fare rules, and purchase cap already stored in the active mission. This tool intentionally accepts no filters, so the caller cannot expand authority.",
+    description: describes("Search only the route, date, fare rules, and purchase cap stored in the active mission; callers cannot expand authority.", "{missionId, offers[]}, where every offer has an offer ID and application-side policy evaluation"),
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     outputSchema: result(closedObject({ missionId: { type: "string", minLength: 1, maxLength: 120 }, offers: { type: "array", items: offerEvaluationSchema, minItems: 0, maxItems: 20 } })),
     readOnlyHint: false,
@@ -129,7 +153,7 @@ export const toolContracts = Object.freeze([
   },
   {
     name: "tighten_flight_mission",
-    description: "Make the active mission safer or narrower. The agent may lower the price cap, require an earlier arrival, reduce connections, or require refundability, but can never expand its authority.",
+    description: describes("Make the mission safer by lowering the cap, requiring an earlier arrival, reducing stops, or requiring refundability; never expand authority.", "the updated complete mission object and new policy version"),
     inputSchema: {
       type: "object",
       properties: {
@@ -146,7 +170,7 @@ export const toolContracts = Object.freeze([
   },
   {
     name: "compare_visible_offers",
-    description: "Compare offers already visible in Mission Control and return application-side policy decisions for each.",
+    description: describes("Compare only offers already visible in Mission Control using application-side policy.", "an array of {offer, evaluation} entries with offer IDs, exact totals, checks, and failed rules"),
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     outputSchema: result({ type: "array", items: offerEvaluationSchema, minItems: 0, maxItems: 20 }),
     readOnlyHint: true,
@@ -154,7 +178,7 @@ export const toolContracts = Object.freeze([
   },
   {
     name: "select_offer",
-    description: "Select one currently visible offer for purchase evaluation. This does not charge or book.",
+    description: describes("Select one visible offer by offerId for later evaluation; this never charges or books.", "{offer, evaluation} for the exact selected offer"),
     inputSchema: { type: "object", properties: { offerId: { type: "string", minLength: 1, maxLength: 80, pattern: "^[A-Za-z0-9_-]+$" } }, required: ["offerId"], additionalProperties: false },
     outputSchema: result(offerEvaluationSchema),
     readOnlyHint: false,
@@ -162,7 +186,7 @@ export const toolContracts = Object.freeze([
   },
   {
     name: "refresh_selected_offer",
-    description: "Refresh the selected offer before purchase and advance its application-controlled quote version.",
+    description: describes("Refresh the selected offer before purchase and advance the application-controlled quote version.", "{offer, quoteVersion, refreshed}"),
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     outputSchema: result(closedObject({ offer: offerSchema, quoteVersion: { type: "integer", minimum: 1 }, refreshed: { const: true } })),
     readOnlyHint: false,
@@ -170,7 +194,7 @@ export const toolContracts = Object.freeze([
   },
   {
     name: "evaluate_purchase",
-    description: "Evaluate the selected offer against the stored route, fare, price, and authority policy. The agent cannot provide its own authorization decision.",
+    description: describes("Evaluate the selected offer against stored route, fare, price, freshness, and authority policy; callers cannot provide the decision.", "{evaluation, receipt} with checks, evidence, failed rules, policy version, and quote version"),
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     outputSchema: result(closedObject({ evaluation: evaluationSchema, receipt: receiptSchema })),
     readOnlyHint: false,
@@ -178,7 +202,7 @@ export const toolContracts = Object.freeze([
   },
   {
     name: "purchase_selected_offer",
-    description: "Issue one sandbox ticket for the selected, refreshed, authorized offer, or return the original ticket when the mission is already booked. Requires an idempotency key. Never creates a real charge or airline order.",
+    description: describes("Issue one sandbox ticket for the selected, refreshed, authorized offer, or replay the original booking. Requires an idempotency key and never creates a real charge or airline order.", "{booking, replayed}, including booking ID, offer ID, ticket number, total, and authorization receipt"),
     inputSchema: {
       type: "object",
       properties: { idempotencyKey: { type: "string", minLength: 1, maxLength: 80, pattern: "^[A-Za-z0-9][A-Za-z0-9.:-]{0,79}$" } },
@@ -191,7 +215,7 @@ export const toolContracts = Object.freeze([
   },
   {
     name: "get_booking_receipt",
-    description: "Read the canonical sandbox booking receipt without passenger or payment data.",
+    description: describes("Read the canonical sandbox booking receipt without passenger or payment data.", "the ticketed booking, or {status: not_booked}"),
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     outputSchema: result({ oneOf: [bookingSchema, closedObject({ status: { const: "not_booked" } })] }),
     readOnlyHint: true,
@@ -199,7 +223,7 @@ export const toolContracts = Object.freeze([
   },
   {
     name: "revoke_purchase_authority",
-    description: "Revoke the active mission authority so future purchase attempts are denied while prior receipts remain readable. A human can recover by replacing the mission authority.",
+    description: describes("Revoke the active mission authority so future purchases are denied while prior receipts remain readable; a human can replace the mandate later.", "{missionId, authority: revoked, revoked: true}"),
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     outputSchema: result(closedObject({ missionId: { type: "string", minLength: 1, maxLength: 120 }, authority: { const: "revoked" }, revoked: { const: true } })),
     readOnlyHint: false,
@@ -244,7 +268,7 @@ export function validateToolInput(contract, input) {
   return input;
 }
 
-export function activeToolNames(mission, now = new Date()) {
+export function validToolNames(mission, now = new Date()) {
   const names = new Set(["read_flight_mission"]);
   const authorityUsable = mission.authority === "active" && Number.isFinite(Date.parse(mission.expiresAt)) && new Date(mission.expiresAt) > now;
   if (authorityUsable) {
@@ -267,4 +291,8 @@ export function activeToolNames(mission, now = new Date()) {
     names.add("purchase_selected_offer");
   }
   return [...names];
+}
+
+export function discoverableToolNames() {
+  return [...toolNames];
 }

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { z } from "zod";
 import { createMission, evaluatedOffers, searchOffers } from "./engine.js";
-import { activeToolNames, toolContracts, validateToolInput } from "./tool-contracts.js";
+import { discoverableToolNames, toolContracts, validToolNames, validateToolInput } from "./tool-contracts.js";
 
 test("tool names are unique and use bounded schemas", () => {
   assert.equal(new Set(toolContracts.map((tool) => tool.name)).size, toolContracts.length);
@@ -36,7 +36,7 @@ test("browser tool inputs are validated again at the application boundary", () =
 
 test("decision evidence publishes exact stored and offered contracts", () => {
   const readMission = toolContracts.find(({ name }) => name === "read_flight_mission");
-  const booking = readMission.outputSchema.oneOf[0].properties.booking.anyOf[0];
+  const booking = readMission.outputSchema.oneOf[0].properties.data.properties.booking.anyOf[0];
   const evidence = booking.properties.authorizationReceipt.properties.evidence;
   assert.equal(evidence.properties.price.properties.stored.additionalProperties, false);
   assert.equal(evidence.properties.cabin.properties.stored.items.enum.includes("premium_economy"), true);
@@ -65,48 +65,69 @@ test("provider-backed offer tools identify untrusted content", () => {
   }
 });
 
-test("tool exposure follows transaction state", () => {
+test("all tools remain discoverable while valid actions follow transaction state", () => {
   const mission = createMission();
-  assert.deepEqual(new Set(activeToolNames(mission)), new Set(["read_flight_mission", "tighten_flight_mission", "revoke_purchase_authority", "search_flights"]));
+  assert.deepEqual(discoverableToolNames(), toolContracts.map(({ name }) => name));
+  assert.deepEqual(new Set(validToolNames(mission)), new Set(["read_flight_mission", "tighten_flight_mission", "revoke_purchase_authority", "search_flights"]));
   mission.status = "authorized";
-  assert.equal(activeToolNames(mission).includes("purchase_selected_offer"), true);
+  assert.equal(validToolNames(mission).includes("purchase_selected_offer"), true);
   mission.status = "ticketed";
   mission.booking = { id: "booking" };
-  assert.deepEqual(new Set(activeToolNames(mission)), new Set(["read_flight_mission", "revoke_purchase_authority", "purchase_selected_offer", "get_booking_receipt"]));
+  assert.deepEqual(new Set(validToolNames(mission)), new Set(["read_flight_mission", "revoke_purchase_authority", "purchase_selected_offer", "get_booking_receipt"]));
   mission.authority = "revoked";
-  assert.deepEqual(new Set(activeToolNames(mission)), new Set(["read_flight_mission", "purchase_selected_offer", "get_booking_receipt"]));
+  assert.deepEqual(new Set(validToolNames(mission)), new Set(["read_flight_mission", "purchase_selected_offer", "get_booking_receipt"]));
 });
 
-test("expired authority removes consequential tools even when status is stale", () => {
+test("expired authority blocks consequential tools even when status is stale", () => {
   const mission = createMission({ status: "authorized", expiresAt: "2020-01-01T00:00:00.000Z" });
-  assert.deepEqual(activeToolNames(mission, new Date("2026-01-01T00:00:00.000Z")), ["read_flight_mission"]);
+  assert.deepEqual(validToolNames(mission, new Date("2026-01-01T00:00:00.000Z")), ["read_flight_mission"]);
+  assert.equal(discoverableToolNames().length, 10);
 });
 
 test("search results satisfy the published structured output contract", () => {
   const mission = createMission();
   mission.offers = searchOffers(mission);
   const contract = toolContracts.find(({ name }) => name === "search_flights");
-  const output = { missionId: mission.id, offers: evaluatedOffers(mission) };
+  const output = {
+    data: { missionId: mission.id, offers: evaluatedOffers(mission) },
+    missionStatus: "offers_ready",
+    validNextActions: ["read_flight_mission", "search_flights", "tighten_flight_mission", "compare_visible_offers", "select_offer", "revoke_purchase_authority"],
+  };
   assert.doesNotThrow(() => z.fromJSONSchema(contract.outputSchema).parse(output));
 });
 
-test("the clean-state lifecycle makes every declared browser tool reachable", () => {
+test("the clean-state lifecycle makes every declared browser tool valid at some state", () => {
   const mission = createMission();
-  const reachable = new Set(activeToolNames(mission));
+  const reachable = new Set(validToolNames(mission));
   for (const status of ["ready", "offers_ready", "offer_selected", "quote_refreshed", "authorized", "ticketed"]) {
     mission.status = status;
     if (status === "ticketed") mission.booking = { id: "booking" };
-    for (const name of activeToolNames(mission)) reachable.add(name);
+    for (const name of validToolNames(mission)) reachable.add(name);
   }
   assert.deepEqual(reachable, new Set(toolContracts.map(({ name }) => name)));
+});
+
+test("every browser result contract describes stable state guidance", () => {
+  for (const contract of toolContracts) {
+    assert.match(contract.description, /missionStatus and validNextActions/);
+    assert.ok(contract.description.length <= 500, contract.name);
+    for (const branch of contract.outputSchema.oneOf) {
+      assert.ok(branch.properties.missionStatus, contract.name);
+      assert.ok(branch.properties.validNextActions, contract.name);
+    }
+  }
 });
 
 test("the browser entrypoint uses the required WebMCP API", () => {
   const source = readFileSync(new URL("./app.js", import.meta.url), "utf8");
   assert.match(source, /document\.modelContext\.registerTool\(\{/);
+  assert.match(source, /for \(const contract of toolContracts\)/);
+  assert.doesNotMatch(source, /toolContracts\.filter/);
   assert.match(source, /outputSchema: contract\.outputSchema/);
   assert.match(source, /code, message, retryable/);
   assert.match(source, /nextAction/);
+  assert.match(source, /missionStatus: mission\.status, validNextActions/);
+  assert.match(source, /assertToolIsValid/);
 });
 
 test("provider content is rendered without HTML injection sinks", () => {

@@ -16,7 +16,7 @@ The traveler sets exact, revocable limits. The agent searches and executes. Flig
 
 ## Why WebMCP
 
-Traditional browser agents infer controls from the visual interface and can carry stale or adversarial page content into a consequential action. WebMCP gives FlightSweeper a structured, page-scoped transaction surface with bounded inputs and explicit trust annotations. The human and agent share the same visible transaction state, while the page exposes only the tools valid for the current step.
+Traditional browser agents infer controls from the visual interface and can carry stale or adversarial page content into a consequential action. WebMCP gives FlightSweeper a structured, page-scoped transaction surface with bounded inputs and explicit trust annotations. The human and agent share the same visible transaction state. All tools remain discoverable so the agent can plan, while application-side checks expose the valid next actions and reject anything premature or prohibited.
 
 The division of responsibility is explicit: the human owns authority, the agent owns search and execution, suppliers own inventory, and FlightSweeper owns policy and transaction evidence.
 
@@ -36,7 +36,7 @@ The agent reads the mandate, searches sandbox inventory, compares offers, select
 
 ## WebMCP implementation
 
-The page registers 10 tools with `document.modelContext.registerTool()`, bounded input and result schemas, and accurate `readOnlyHint` and `untrustedContentHint` annotations. An `AbortController` removes the prior tool set when transaction state changes, then the page registers only the valid next actions. Human controls and WebMCP tools call the same application functions and persist state in versioned browser storage.
+The page registers 10 tools with `document.modelContext.registerTool()`, bounded input and result schemas, and accurate `readOnlyHint` and `untrustedContentHint` annotations. The stable tool catalog makes the complete workflow discoverable. Every success returns data, mission status, and valid next actions; every failure returns a typed error with the same state guidance. Human controls and WebMCP tools call the same application functions and persist state in versioned browser storage.
 
 We verified the complete lifecycle in ChatGPT desktop’s in-app browser and Chromium 151: adversarial denial, monotonic tightening, quote refresh, authorization, ticketing, replay, revocation, and receipt retrieval.
 

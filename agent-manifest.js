@@ -118,7 +118,7 @@ export function publicAgentManifest() {
           untrustedContentHint: tool.untrustedContentHint,
         },
       })),
-      lifecycle: "Only tools valid for the current mission state are registered.",
+      lifecycle: "All browser tools remain discoverable; application-side state and policy checks enforce which actions are valid next.",
     },
     mcp: { transport: `${SITE_URL}/mcp`, protocolVersion: MCP_VERSION, protocolVersions: MCP_VERSIONS, tools: remoteTools },
     modified: "2026-08-30",

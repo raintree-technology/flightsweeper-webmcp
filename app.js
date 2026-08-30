@@ -1,6 +1,6 @@
 import { createDecisionReceipt, createMission, describeRuleEvidence, evaluateOffer, evaluatedOffers, hasActiveAuthority, purchase, replaceMissionPolicy, searchOffers, tightenMission } from "./engine.js";
 import { createAppState, parseStoredState, replaceCurrentMission, serializeState, STORAGE_KEY } from "./state.js";
-import { activeToolNames, toolContracts, validateToolInput } from "./tool-contracts.js";
+import { toolContracts, validToolNames, validateToolInput } from "./tool-contracts.js";
 import { displayOfferLocalTime } from "./time.js";
 
 const stored = parseStoredState(localStorage.getItem(STORAGE_KEY));
@@ -413,17 +413,30 @@ const toolExecutors = {
 
 function toolError(error) {
   const message = error instanceof Error ? error.message : "The tool could not complete the action.";
-  const code = /valid JSON|Invalid tool input/i.test(message) ? "invalid_input"
+  const code = error?.toolCode ?? (/valid JSON|Invalid tool input/i.test(message) ? "invalid_input"
     : /not visible|Select an offer|No offer|No valid mission/i.test(message) ? "invalid_state"
       : /denied|authority|cannot|requires human confirmation/i.test(message) ? "policy_blocked"
         : /Refresh|Evaluate the current policy/i.test(message) ? "quote_stale"
-          : "tool_failed";
-  return { code, message, retryable: code === "quote_stale", nextAction: code === "quote_stale" ? "Refresh the selected offer, evaluate it again, then retry." : "Read the active mission and use a tool available for its current state." };
+          : "tool_failed");
+  const validNextActions = validToolNames(mission);
+  const nextAction = code === "quote_stale"
+    ? "Refresh the selected offer, evaluate it again, then retry."
+    : `Use one of the valid next actions: ${validNextActions.join(", ")}.`;
+  return { code, message, retryable: code === "quote_stale", nextAction };
 }
 
 function toolResult(value, isError = false) {
-  const structuredContent = isError ? { error: toolError(value) } : value;
+  const stateGuidance = { missionStatus: mission.status, validNextActions: validToolNames(mission) };
+  const structuredContent = isError ? { error: toolError(value), ...stateGuidance } : { data: value, ...stateGuidance };
   return { ...(isError ? { isError: true } : {}), content: [{ type: "text", text: JSON.stringify(structuredContent) }], structuredContent };
+}
+
+function assertToolIsValid(name) {
+  const validNextActions = validToolNames(mission);
+  if (validNextActions.includes(name)) return;
+  const error = new Error(`${name} is not valid while the mission status is ${mission.status}.`);
+  error.toolCode = "invalid_state";
+  throw error;
 }
 
 function normalizeInput(input) {
@@ -440,14 +453,16 @@ async function syncWebMcpTools() {
   }
   toolController?.abort();
   toolController = new AbortController();
-  const names = new Set(activeToolNames(mission));
-  for (const contract of toolContracts.filter((tool) => names.has(tool.name))) {
+  for (const contract of toolContracts) {
     await document.modelContext.registerTool({
       name: contract.name, description: contract.description, inputSchema: contract.inputSchema, outputSchema: contract.outputSchema,
       annotations: { readOnlyHint: contract.readOnlyHint, untrustedContentHint: contract.untrustedContentHint },
       async execute(rawInput) {
         activeToolExecutions += 1;
-        try { return toolResult(await toolExecutors[contract.name](validateToolInput(contract, normalizeInput(rawInput)))); }
+        try {
+          assertToolIsValid(contract.name);
+          return toolResult(await toolExecutors[contract.name](validateToolInput(contract, normalizeInput(rawInput))));
+        }
         catch (error) { return toolResult(error, true); }
         finally {
           activeToolExecutions -= 1;
@@ -460,7 +475,7 @@ async function syncWebMcpTools() {
     }, { signal: toolController.signal });
   }
   nodes.webMcpStatusTitle.textContent = "WebMCP connected";
-  nodes.webMcpStatusDetail.textContent = `${names.size} tools are available for the current mission state.`;
+  nodes.webMcpStatusDetail.textContent = `${toolContracts.length} tools are discoverable. FlightSweeper enforces valid next actions for the current mission state.`;
   nodes.webMcpStatus.classList.remove("unavailable");
   nodes.webMcpStatus.classList.add("supported");
 }

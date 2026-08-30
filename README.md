@@ -76,7 +76,7 @@ npm test
 
 ## WebMCP tools
 
-The browser entry point registers only the contracts valid for the current mission state. Every contract publishes bounded input and result schemas. This excerpt is abridged from the browser implementation:
+The browser entry point keeps all 10 contracts discoverable so an agent can plan the complete workflow. Every contract publishes bounded input and result schemas. Application-side state and policy checks reject premature or prohibited actions with typed recovery guidance. This excerpt is abridged from the browser implementation:
 
 ```js
 await document.modelContext.registerTool({
@@ -111,7 +111,7 @@ See the complete registration lifecycle in [`app.js`](app.js) and the bounded co
 - `get_booking_receipt`
 - `revoke_purchase_authority`
 
-Every purchase is re-evaluated from stored mission and offer state. Tool callers cannot supply a price, card, passenger identity, or authorization decision. After a ticket exists, any later purchase retry returns the original booking—even with a different retry key or after authority is revoked—rather than creating another ticket.
+Every result uses the same envelope: `data`, `missionStatus`, and `validNextActions` on success; `error`, `missionStatus`, and `validNextActions` on failure. Every purchase is re-evaluated from stored mission and offer state. Tool callers cannot supply a price, card, passenger identity, or authorization decision. After a ticket exists, any later purchase retry returns the original booking—even with a different retry key or after authority is revoked—rather than creating another ticket.
 
 ## Safety properties
 
@@ -120,14 +120,14 @@ Every purchase is re-evaluated from stored mission and offer state. Tool callers
 - Supplier-backed outputs use `untrustedContentHint`.
 - Price, itinerary, policy, expiry, and authority are reloaded from application state at execution.
 - Purchase requires authorization evidence bound to the selected offer, policy version, quote version, price, and currency.
-- Expired authority removes consequential tools; saving the human mandate issues a new 24-hour authority window.
+- Expired authority blocks consequential tools at execution; saving the human mandate issues a new 24-hour authority window.
 - Idempotency records and transaction receipts survive page reloads.
 - Revocation blocks future purchases but does not erase prior evidence.
 
 ## Project structure
 
 - `engine.js` contains pure mission, policy, receipt, and purchase rules.
-- `tool-contracts.js` defines the public WebMCP surface and state-dependent exposure.
+- `tool-contracts.js` defines the public WebMCP surface, result envelopes, and valid-next-action model.
 - `state.js` owns the versioned browser persistence contract.
 - `app.js` binds the human interface and WebMCP callbacks to the same state transitions.
 

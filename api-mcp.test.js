@@ -168,6 +168,8 @@ test("the public agent manifest has explicit lifecycle and bounded remote output
   assert.equal(manifest.schemaVersion, "1.0.0");
   assert.equal(manifest.modified, "2026-08-30");
   assert.equal(manifest.boundary.includes("No real supplier"), true);
+  assert.match(manifest.webmcp.lifecycle, /All browser tools remain discoverable/);
+  assert.equal(manifest.webmcp.tools.length, 10);
   assert.equal(manifest.mcp.tools.every((tool) => tool.outputSchema.additionalProperties === false), true);
 });
 
