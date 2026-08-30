@@ -7,5 +7,8 @@
 | `favicon.svg` | Challenge-edition FlightSweeper mark | Created for and distributed with this MIT-licensed challenge edition | Original SVG |
 | `assets/fonts/Geist-Variable.woff2` | Geist Sans from Vercel's Geist font distribution | SIL Open Font License 1.1; license retained in `assets/fonts/OFL.txt` | Self-hosted WOFF2 variable font |
 | `assets/fonts/GeistMono-Variable.woff2` | Geist Mono from Vercel's Geist font distribution | SIL Open Font License 1.1; license retained in `assets/fonts/OFL.txt` | Self-hosted WOFF2 variable font |
+| `submission/screenshots/01-hero-webmcp-connected.png` | Public challenge deployment | Synthetic challenge data only; approved for this repository and the Devpost submission | Current interface capture |
+| `submission/screenshots/02-adversarial-offer-denied.jpg` | Public challenge deployment | Synthetic challenge data only; approved for this repository and the Devpost submission | Cropped and compressed interface capture |
+| `submission/screenshots/03-ticket-and-policy-evidence.jpg` | Public challenge deployment | Synthetic challenge data only; approved for this repository and the Devpost submission | Cropped and compressed interface capture |
 
 The assets contain no customer information, production screenshots, provider data, credentials, or identifiable people. Their distribution scope is this public repository, its challenge deployment, submission screenshots, and the public demonstration video. The Geist fonts remain under the SIL Open Font License 1.1. Other repository assets are distributed under the repository's MIT license; that copyright license does not grant rights to use FlightSweeper trademarks outside this project.

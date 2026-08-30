@@ -1,5 +1,7 @@
 # FlightSweeper WebMCP Challenge Edition
 
+[![CI](https://github.com/raintree-technology/flightsweeper-webmcp/actions/workflows/ci.yml/badge.svg)](https://github.com/raintree-technology/flightsweeper-webmcp/actions/workflows/ci.yml)
+
 FlightSweeper lets a browser agent complete a sandbox flight purchase without letting the model set its own authority.
 
 The traveler sets exact, revocable limits. The agent searches and executes. FlightSweeper independently approves or denies the transaction and records why.
@@ -16,7 +18,11 @@ The traveler sets exact, revocable limits. The agent searches and executes. Flig
 
 **Demo:** [Watch the 2:23 public video](https://youtu.be/pBOZ6nnwNKs)
 
-This challenge edition never creates a real charge or airline order. It contains no production FlightSweeper credentials, customer data, or private provider implementation. FinSync LLC operates FlightSweeper and is registered as a California Seller of Travel, CST 2172984-70. Registration as a seller of travel does not constitute approval by the State of California.
+This challenge edition never creates a real charge or airline order. It contains no production credentials, customer data, or private provider implementation.
+
+FinSync LLC operates FlightSweeper and holds California Seller of Travel registration CST 2172984-70. Registration as a seller of travel does not constitute approval by the State of California.
+
+![FlightSweeper mission workspace with 10 WebMCP tools connected](submission/screenshots/01-hero-webmcp-connected.png)
 
 ## Try the core flow
 
@@ -37,11 +43,15 @@ What this proves:
 
 ## What is new for the challenge
 
-The public challenge edition was created for the WebMCP Challenge after its August 25, 2026 kickoff. Production FlightSweeper remains private and unchanged. The challenge work is the self-contained sandbox, its state-aware WebMCP tool surface, the monotonic authority model, adversarial supplier fixture, independent policy and evidence engine, idempotent ticket replay, and the visible human-agent transaction workspace in this repository.
+The public challenge edition was created for the WebMCP Challenge after its August 25, 2026 kickoff. Production FlightSweeper remains private and unchanged.
+
+The challenge work includes the sandbox, stable WebMCP catalog, and visible human-agent workspace. It also includes state-validated execution, monotonic authority, adversarial supplier content, policy evidence, and idempotent ticket replay.
 
 ## Why WebMCP
 
-The webpage, traveler, and agent share one transaction state. The traveler can replace or expand authority through the human interface. The agent can only narrow it. Tools appear and disappear as the mission moves from draft to search, selection, authorization, and ticketing.
+The webpage, traveler, and agent share one transaction state. The traveler can replace or expand authority through the human interface. The agent can only narrow it.
+
+The page keeps all 10 tools discoverable throughout the transaction. This stable catalog lets an agent plan the full workflow. Before each call, FlightSweeper checks the current mission state. An invalid call returns `invalid_state`, the current `missionStatus`, and `validNextActions`.
 
 One sandbox supplier result includes an adversarial instruction. Provider-backed tools mark their content untrusted, and the application policy engine independently rejects the offer because it violates the stored mandate.
 
@@ -89,6 +99,7 @@ await document.modelContext.registerTool({
     untrustedContentHint: contract.untrustedContentHint,
   },
   async execute(rawInput) {
+    assertToolIsValid(contract.name);
     return toolResult(
       await toolExecutors[contract.name](
         validateToolInput(contract, normalizeInput(rawInput)),
@@ -111,7 +122,17 @@ See the complete registration lifecycle in [`app.js`](app.js) and the bounded co
 - `get_booking_receipt`
 - `revoke_purchase_authority`
 
-Every result uses the same envelope: `data`, `missionStatus`, and `validNextActions` on success; `error`, `missionStatus`, and `validNextActions` on failure. Every purchase is re-evaluated from stored mission and offer state. Tool callers cannot supply a price, card, passenger identity, or authorization decision. After a ticket exists, any later purchase retry returns the original booking—even with a different retry key or after authority is revoked—rather than creating another ticket.
+Every result uses one envelope. A success contains `data`, `missionStatus`, and `validNextActions`. A failure contains `error`, `missionStatus`, and `validNextActions`.
+
+FlightSweeper re-evaluates every purchase from stored mission and offer state. Tool callers cannot supply a price, card, passenger identity, or authorization decision. After ticketing, every purchase retry returns the original booking. This rule also applies to a different retry key and to a retry after revocation.
+
+## Transaction evidence
+
+The interface shows why FlightSweeper approved or denied each consequential action. These public screenshots use synthetic challenge data.
+
+| Policy denial | Repeat-safe sandbox ticket |
+| --- | --- |
+| ![FlightSweeper blocks an adversarial non-refundable offer and records the failed policy rule](submission/screenshots/02-adversarial-offer-denied.jpg) | ![FlightSweeper displays the sandbox ticket with policy, quote, and idempotency evidence](submission/screenshots/03-ticket-and-policy-evidence.jpg) |
 
 ## Safety properties
 
@@ -150,7 +171,11 @@ The accessibility target for the challenge is WCAG 2.2 Level AA in current ChatG
 
 ## Raintree open-source relationship
 
-This MIT-licensed challenge repository is published by Raintree Technology as a self-contained FlightSweeper demonstration. Private production FlightSweeper code and services are not included. It applies a relevant subset of Raintree's historical standards archive as a review reference; [STANDARDS.md](STANDARDS.md) records evidence, exceptions, and non-claims.
+Raintree Technology publishes this MIT-licensed repository as a self-contained FlightSweeper demonstration. The repository excludes private production code and services. It applies the relevant profiles from Raintree's standards library. [STANDARDS.md](STANDARDS.md) records the evidence, limits, and remaining manual checks. This record is not a certification claim.
+
+## Creator
+
+[Zachary Roth](https://devpost.com/zacharyroth) designed and built this challenge edition as FlightSweeper's sole product designer and engineer. FinSync LLC operates FlightSweeper and holds California Seller of Travel registration CST 2172984-70.
 
 ## Contributing, security, and license
 

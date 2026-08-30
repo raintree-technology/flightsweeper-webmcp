@@ -42,7 +42,7 @@ We verified the complete lifecycle in ChatGPT desktop’s in-app browser and Chr
 
 ## What we built during the challenge
 
-Production FlightSweeper existed before the challenge. After the August 25, 2026 kickoff, we built this public, self-contained WebMCP Challenge Edition: the sandbox inventory, state-aware tool surface, authority and policy engine, adversarial fixture, durable evidence, repeat-safe ticketing, browser interface, tests, documentation, and deployment. Production FlightSweeper remains private and unchanged.
+Production FlightSweeper existed before the challenge. After the August 25, 2026 kickoff, we built this public, self-contained WebMCP Challenge Edition: the sandbox inventory, stable tool catalog, state-validated execution, authority and policy engine, adversarial fixture, durable evidence, repeat-safe ticketing, browser interface, tests, documentation, and deployment. Production FlightSweeper remains private and unchanged.
 
 The challenge edition isolates the transaction rail and never charges a card or creates an airline order. It demonstrates authority, policy, quote-binding, revocation, and idempotency controls. A live provider connection would require additional provider, payment, identity, operational, and regulatory controls.
 

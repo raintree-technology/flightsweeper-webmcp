@@ -12,11 +12,13 @@ FlightSweeper Challenge Edition publishes two agent-facing interfaces. Both expo
 
 | Interface | Purpose | Access | Side effects |
 | --- | --- | --- | --- |
-| Browser WebMCP | Operate the synthetic mission visible on the page | Browser-local and state-dependent | Local sandbox state only |
+| Browser WebMCP | Operate the synthetic mission visible on the page | Browser-local; all 10 tools remain discoverable | Local sandbox state only |
 | Remote MCP | Inspect challenge capabilities, contracts, inventory, and safety behavior | Anonymous, read-only HTTPS | None |
 | Agent manifest | Discover both interfaces and their schemas | Anonymous `GET` or `HEAD` | None |
 
-The browser WebMCP contract is documented in [AGENT_CONTRACT.md](AGENT_CONTRACT.md). The canonical machine-readable manifest is available at [`/agent-tools.json`](https://webmcp.flightsweeper.com/agent-tools.json).
+The browser catalog remains stable throughout the transaction. FlightSweeper validates each call against the current mission state and returns `validNextActions`.
+
+[AGENT_CONTRACT.md](AGENT_CONTRACT.md) documents the browser WebMCP contract. [`/agent-tools.json`](https://webmcp.flightsweeper.com/agent-tools.json) is the canonical machine-readable manifest.
 
 ## First request
 

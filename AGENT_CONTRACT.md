@@ -30,7 +30,7 @@ Human confirmation mode can be satisfied only through the visible page review di
 
 ## Stop and recovery conditions
 
-The agent must stop when authority is revoked or expired, no visible offer is eligible, a quote is stale, confirmation is required, tool input is invalid, state no longer exposes the requested tool, or policy evaluation denies the offer. A policy or selection change clears stale evidence. A repeated purchase key returns the original booking; after ticketing, a different retry key also resolves to that same booking.
+The agent must stop when authority is revoked or expired, no visible offer is eligible, a quote is stale, confirmation is required, tool input is invalid, the requested tool is not valid for the current state, or policy evaluation denies the offer. A policy or selection change clears stale evidence. A repeated purchase key returns the original booking; after ticketing, a different retry key also resolves to that same booking.
 
 The human can revoke authority, reset the current transaction, create a new mission while preserving receipts, or erase all challenge data stored in the browser.
 

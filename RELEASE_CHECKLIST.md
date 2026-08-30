@@ -9,7 +9,7 @@ This is a public sandbox with a static browser application and small MCP API end
 - [x] Unit and contract tests pass with `npm test`.
 - [x] Policy authorization, denial, expiration, revocation, tightening, evidence invalidation, quote freshness, human confirmation, and repeat safety are covered.
 - [x] Adversarial supplier content cannot alter policy inputs.
-- [x] WebMCP schemas are bounded and state exposure is contract-tested.
+- [x] WebMCP schemas are bounded. Stable discovery and state-validated execution are contract-tested.
 - [x] Remote MCP initialization, version negotiation, tool discovery, input rejection, and structured output pass through the real Streamable HTTP transport.
 - [x] Public API request size, anonymous defensive throttling, correlation, origin, credential, method, cache-header, and CORS behavior are contract-tested.
 - [x] Secret scan reports no credentials or private data.
@@ -52,4 +52,4 @@ The remote MCP remains anonymous and read-only. Its in-memory request limiter is
 
 The local candidate exposes expected headings, landmarks, control names, states, descriptions, validation focus, and live regions through macOS accessibility APIs. On August 28, 2026, VoiceOver was enabled for a structural navigation pass against the public app and then returned to its prior off state. The environment could inspect VoiceOver-exposed structure but could not hear synthesized speech, so a short human listening confirmation remains required before checking the screen-reader gate.
 
-On August 28, 2026, ChatGPT desktop in-app browser 26.820.80927 discovered and invoked all ten tools against the public deployment. The run covered an expired stored mandate, fresh mission creation, search and comparison, adversarial non-refundable denial, monotonic tightening to nonstop, quote refresh, authorization, sandbox ticketing, idempotent replay, revocation, and receipt retrieval after revocation. The final page exposed only the three valid ticketed-and-revoked tools and reported no browser console warnings or errors.
+On August 28, 2026, ChatGPT desktop in-app browser 26.820.80927 discovered and invoked all 10 tools against the public deployment. The run covered an expired stored mandate, fresh mission creation, search and comparison, adversarial non-refundable denial, monotonic tightening to nonstop, quote refresh, authorization, sandbox ticketing, idempotent replay, revocation, and receipt retrieval after revocation. The final page kept all 10 tools discoverable and reported three valid next actions. The browser console reported no warnings or errors.

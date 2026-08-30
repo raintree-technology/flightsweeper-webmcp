@@ -6,7 +6,7 @@ This is a bounded challenge edition. Keep changes self-contained, safe to publis
 
 - Read `AGENTS.md`, `AGENT_CONTRACT.md`, `SECURITY.md`, and `PRIVACY.md`.
 - Do not add production credentials, endpoints, provider code, customer data, or private FlightSweeper material.
-- Preserve application-side policy enforcement, monotonic agent tightening, state-aware tool exposure, and idempotent replay.
+- Preserve stable tool discovery, state-validated execution, application-side policy enforcement, monotonic agent tightening, and idempotent replay.
 - Treat supplier content as untrusted and render it as text.
 - Avoid runtime dependencies unless their benefit and public supply-chain cost are explicitly reviewed.
 

@@ -1,6 +1,6 @@
 # FlightSweeper WebMCP Challenge Edition
 
-FlightSweeper is a synthetic reference experience for browser agents. A traveler creates a bounded mission. WebMCP exposes only the tools valid for the current mission state. The application—not the model—enforces route, fare, price, quote freshness, confirmation mode, revocation, and idempotency.
+FlightSweeper is a synthetic reference experience for browser agents. A traveler creates a bounded mission. WebMCP keeps all 10 tools discoverable so an agent can plan the workflow. FlightSweeper validates each call against the current mission state. The application—not the model—enforces route, fare, price, quote freshness, confirmation mode, revocation, and idempotency.
 
 No real inventory, supplier, payment method, passenger identity, reservation, or ticketing system is connected. All offers and receipts are deterministic challenge fixtures stored in the visitor's browser.
 
