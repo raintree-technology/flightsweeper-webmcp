@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { callRemoteTool, remoteOutputSchemas, remoteTools } from "../agent-manifest.js";
+import { callRemoteTool, remoteOutputSchemas, remoteTools, SITE_URL } from "../agent-manifest.js";
 
 const MAX_BODY_BYTES = 32768;
 const RATE_LIMIT = 30;
@@ -125,9 +125,10 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return send(res, 405, { jsonrpc: "2.0", id: null, error: { code: -32600, message: "Method not allowed" } }, { allow: "POST, OPTIONS" });
   if (process.env.MCP_PUBLIC_DISABLED === "1") return send(res, 503, { jsonrpc: "2.0", id: null, error: { code: -32003, message: "Public MCP is temporarily disabled" } }, { "retry-after": "60" });
   const origin = req.headers.origin;
-  if (origin && origin !== "https://flightsweeper-webmcp.vercel.app") return send(res, 403, { jsonrpc: "2.0", id: null, error: { code: -32004, message: "Origin is not allowed" } });
+  const allowedOrigins = new Set([SITE_URL, "https://flightsweeper-webmcp.vercel.app"]);
+  if (origin && !allowedOrigins.has(origin)) return send(res, 403, { jsonrpc: "2.0", id: null, error: { code: -32004, message: "Origin is not allowed" } });
   const host = String(req.headers.host ?? "").split(":")[0];
-  if (host !== "flightsweeper-webmcp.vercel.app" && !host.endsWith(".vercel.app") && host !== "localhost") return send(res, 403, { jsonrpc: "2.0", id: null, error: { code: -32004, message: "Host is not allowed" } });
+  if (host !== "webmcp.flightsweeper.com" && !host.endsWith(".vercel.app") && host !== "localhost") return send(res, 403, { jsonrpc: "2.0", id: null, error: { code: -32004, message: "Host is not allowed" } });
   if (req.headers.authorization || req.headers.cookie) return send(res, 400, { jsonrpc: "2.0", id: null, error: { code: -32001, message: "Credentials are not accepted by this public endpoint" } });
   const rate = consumeRateLimit(req);
   const limitHeaders = rateHeaders(rate, rate.limited);

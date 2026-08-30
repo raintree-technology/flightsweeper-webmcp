@@ -4,14 +4,14 @@
 
 ## Primary
 
-- [Challenge workspace](https://flightsweeper-webmcp.vercel.app/): Human and WebMCP interface.
-- [Complete machine-readable page](https://flightsweeper-webmcp.vercel.app/page.md): Scope, capabilities, and safety model.
-- [Agent tool manifest](https://flightsweeper-webmcp.vercel.app/agent-tools.json): Versioned WebMCP and remote MCP contracts.
+- [Challenge workspace](https://webmcp.flightsweeper.com/): Human and WebMCP interface.
+- [Complete machine-readable page](https://webmcp.flightsweeper.com/page.md): Scope, capabilities, and safety model.
+- [Agent tool manifest](https://webmcp.flightsweeper.com/agent-tools.json): Versioned WebMCP and remote MCP contracts.
 
 ## Policies
 
-- [Terms](https://flightsweeper-webmcp.vercel.app/terms)
-- [Privacy](https://flightsweeper-webmcp.vercel.app/privacy)
+- [Terms](https://webmcp.flightsweeper.com/terms)
+- [Privacy](https://webmcp.flightsweeper.com/privacy)
 
 ## Optional
 

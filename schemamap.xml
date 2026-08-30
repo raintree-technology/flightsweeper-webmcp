@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemamap xmlns="https://schema.org"><schema><loc>https://flightsweeper-webmcp.vercel.app/agent-tools.json</loc><type>AgentToolManifest</type><lastmod>2026-08-26</lastmod></schema></schemamap>
+<schemamap xmlns="https://schema.org"><schema><loc>https://webmcp.flightsweeper.com/agent-tools.json</loc><type>AgentToolManifest</type><lastmod>2026-08-30</lastmod></schema></schemamap>

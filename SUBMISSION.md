@@ -1,6 +1,6 @@
 # Devpost submission record
 
-Live URL: https://flightsweeper-webmcp.vercel.app
+Live URL: https://webmcp.flightsweeper.com
 
 Public repository: https://github.com/raintree-technology/flightsweeper-webmcp
 
@@ -62,7 +62,7 @@ FinSync LLC operates FlightSweeper and is registered as a California Seller of T
 
 ## Submission checklist
 
-- [x] Public HTTPS URL: https://flightsweeper-webmcp.vercel.app
+- [x] Public HTTPS URL: https://webmcp.flightsweeper.com
 - [x] Public GitHub repository with detected MIT license: https://github.com/raintree-technology/flightsweeper-webmcp
 - [x] Native WebMCP tool discovery and complete lifecycle verified in ChatGPT desktop’s in-app browser
 - [x] Native WebMCP verification completed in Chromium 151, newer than the Chrome 149 minimum

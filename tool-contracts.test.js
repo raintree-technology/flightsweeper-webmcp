@@ -86,7 +86,7 @@ test("the visible activity trail labels post-ticket retries as replays", () => {
 
 test("the public document declares identity, discovery, and truthful example status", () => {
   const document = readFileSync(new URL("./index.html", import.meta.url), "utf8");
-  assert.match(document, /rel="canonical" href="https:\/\/flightsweeper-webmcp\.vercel\.app\/"/);
+  assert.match(document, /rel="canonical" href="https:\/\/webmcp\.flightsweeper\.com\/"/);
   assert.match(document, /property="og:title"/);
   assert.match(document, /name="robots" content="index,follow,max-image-preview:large"/);
   assert.match(document, /Example agent run/);

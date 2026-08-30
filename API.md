@@ -6,7 +6,7 @@ FlightSweeper Challenge Edition publishes two agent-facing interfaces. Both expo
 
 **Lifecycle:** Public challenge interface, version `1.0.0`
 
-**Canonical host:** `https://flightsweeper-webmcp.vercel.app`
+**Canonical host:** `https://webmcp.flightsweeper.com`
 
 ## Choose an interface
 
@@ -16,7 +16,7 @@ FlightSweeper Challenge Edition publishes two agent-facing interfaces. Both expo
 | Remote MCP | Inspect challenge capabilities, contracts, inventory, and safety behavior | Anonymous, read-only HTTPS | None |
 | Agent manifest | Discover both interfaces and their schemas | Anonymous `GET` or `HEAD` | None |
 
-The browser WebMCP contract is documented in [AGENT_CONTRACT.md](AGENT_CONTRACT.md). The canonical machine-readable manifest is available at [`/agent-tools.json`](https://flightsweeper-webmcp.vercel.app/agent-tools.json).
+The browser WebMCP contract is documented in [AGENT_CONTRACT.md](AGENT_CONTRACT.md). The canonical machine-readable manifest is available at [`/agent-tools.json`](https://webmcp.flightsweeper.com/agent-tools.json).
 
 ## First request
 
@@ -24,7 +24,7 @@ Read the manifest without creating credentials:
 
 ```sh
 curl --fail-with-body \
-  https://flightsweeper-webmcp.vercel.app/agent-tools.json
+  https://webmcp.flightsweeper.com/agent-tools.json
 ```
 
 Expected result: HTTP `200` with `schemaVersion`, the synthetic-only boundary, all 10 browser WebMCP contracts, and all four remote MCP contracts.
@@ -32,7 +32,7 @@ Expected result: HTTP `200` with `schemaVersion`, the synthetic-only boundary, a
 Use an MCP client that supports Streamable HTTP to connect to:
 
 ```text
-https://flightsweeper-webmcp.vercel.app/mcp
+https://webmcp.flightsweeper.com/mcp
 ```
 
 The server currently supports MCP protocol versions `2025-11-25` and `2025-06-18`. The manifest is the source of truth for the current versions and tool schemas.
@@ -46,7 +46,7 @@ curl --fail-with-body \
   --header 'Content-Type: application/json' \
   --header 'MCP-Protocol-Version: 2025-11-25' \
   --data '{"jsonrpc":"2.0","id":"tools-1","method":"tools/list","params":{}}' \
-  https://flightsweeper-webmcp.vercel.app/mcp
+  https://webmcp.flightsweeper.com/mcp
 ```
 
 Expected result: HTTP `200` with four tools. Each tool is read-only, accepts an empty object, and publishes a closed output schema.

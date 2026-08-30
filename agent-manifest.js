@@ -1,6 +1,6 @@
 import { toolContracts } from "./tool-contracts.js";
 
-export const SITE_URL = "https://flightsweeper-webmcp.vercel.app";
+export const SITE_URL = "https://webmcp.flightsweeper.com";
 export const MCP_VERSION = "2025-11-25";
 export const MCP_VERSIONS = Object.freeze([MCP_VERSION, "2025-06-18"]);
 

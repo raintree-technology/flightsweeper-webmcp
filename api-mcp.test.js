@@ -9,7 +9,7 @@ import handler, { remoteOutputValidators } from "./api/mcp.js";
 function request(method, body = "", headers = {}) {
   const req = Readable.from(body ? [body] : []);
   req.method = method;
-  req.headers = { host: "flightsweeper-webmcp.vercel.app", ...headers };
+  req.headers = { host: "webmcp.flightsweeper.com", ...headers };
   return req;
 }
 
@@ -121,6 +121,13 @@ test("the public MCP rejects credentials and foreign browser origins", async () 
   await handler(request("POST", "{}", { origin: "https://example.com", "x-forwarded-for": "203.0.113.45" }), foreignOrigin);
   assert.equal(foreignOrigin.statusCode, 403);
   assert.equal(foreignOrigin.body.error.code, -32004);
+
+  for (const [index, origin] of ["https://webmcp.flightsweeper.com", "https://flightsweeper-webmcp.vercel.app"].entries()) {
+    const allowedOrigin = response();
+    await handler(request("POST", "{", { origin, "x-forwarded-for": `203.0.113.${47 + index}` }), allowedOrigin);
+    assert.equal(allowedOrigin.statusCode, 400);
+    assert.equal(allowedOrigin.body.error.code, -32700);
+  }
 });
 
 test("pre-parsed request bodies remain subject to the 32 KiB limit", async () => {

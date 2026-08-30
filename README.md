@@ -8,7 +8,7 @@ The traveler sets exact, revocable limits. The agent searches and executes. Flig
 
 **Status:** Submitted on August 28, 2026; available for public evaluation
 
-**Live challenge app:** [flightsweeper-webmcp.vercel.app](https://flightsweeper-webmcp.vercel.app)
+**Live challenge app:** [webmcp.flightsweeper.com](https://webmcp.flightsweeper.com)
 
 **Source:** [github.com/raintree-technology/flightsweeper-webmcp](https://github.com/raintree-technology/flightsweeper-webmcp)
 
@@ -22,7 +22,7 @@ This challenge edition never creates a real charge or airline order. It contains
 
 **Prerequisite:** Use ChatGPT desktop’s in-app browser or Chrome 149+ with WebMCP enabled.
 
-1. Open the [live challenge app](https://flightsweeper-webmcp.vercel.app).
+1. Open the [live challenge app](https://webmcp.flightsweeper.com).
 2. Send the prompt below to the browser agent.
 3. Watch the mission, offer, and evidence states change as the agent calls the registered tools.
 4. Open **Activity** and **Evidence** to inspect the denial, authorization, ticket, and replay records.
@@ -136,8 +136,8 @@ See [SUBMISSION.md](SUBMISSION.md) for the Devpost description and demo sequence
 - [Release and accessibility checklist](RELEASE_CHECKLIST.md)
 - [Raintree standards application](STANDARDS.md)
 - [Challenge data and privacy](PRIVACY.md)
-- [Public Terms of Use](https://flightsweeper-webmcp.vercel.app/terms)
-- [Public Privacy Policy](https://flightsweeper-webmcp.vercel.app/privacy)
+- [Public Terms of Use](https://webmcp.flightsweeper.com/terms)
+- [Public Privacy Policy](https://webmcp.flightsweeper.com/privacy)
 - [Legal scope and review record](LEGAL_REVIEW.md)
 - [Security policy](SECURITY.md)
 

@@ -1,6 +1,6 @@
 # Challenge data and privacy
 
-The public, controlling challenge Privacy Policy is available at [flightsweeper-webmcp.vercel.app/privacy](https://flightsweeper-webmcp.vercel.app/privacy). This file summarizes the application-specific data boundary for maintainers.
+The public, controlling challenge Privacy Policy is available at [webmcp.flightsweeper.com/privacy](https://webmcp.flightsweeper.com/privacy). This file summarizes the application-specific data boundary for maintainers.
 
 FlightSweeper WebMCP Challenge Edition runs entirely in the visitor's browser. It does not send mission or receipt data to FlightSweeper, FinSync LLC, an airline, a supplier, or an analytics provider.
 

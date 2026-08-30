@@ -4,4 +4,4 @@ FlightSweeper is a synthetic reference experience for browser agents. A traveler
 
 No real inventory, supplier, payment method, passenger identity, reservation, or ticketing system is connected. All offers and receipts are deterministic challenge fixtures stored in the visitor's browser.
 
-The browser-local tool surface is published at https://flightsweeper-webmcp.vercel.app/agent-tools.json. The public remote MCP at https://flightsweeper-webmcp.vercel.app/mcp exposes documentation and fixture metadata only; it cannot inspect or change a visitor's mission.
+The browser-local tool surface is published at https://webmcp.flightsweeper.com/agent-tools.json. The public remote MCP at https://webmcp.flightsweeper.com/mcp exposes documentation and fixture metadata only; it cannot inspect or change a visitor's mission.
