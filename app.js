@@ -435,7 +435,7 @@ async function syncWebMcpTools() {
   const names = new Set(activeToolNames(mission));
   for (const contract of toolContracts.filter((tool) => names.has(tool.name))) {
     await document.modelContext.registerTool({
-      name: contract.name, description: contract.description, inputSchema: contract.inputSchema,
+      name: contract.name, description: contract.description, inputSchema: contract.inputSchema, outputSchema: contract.outputSchema,
       annotations: { readOnlyHint: contract.readOnlyHint, untrustedContentHint: contract.untrustedContentHint },
       async execute(rawInput) {
         activeToolExecutions += 1;

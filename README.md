@@ -76,7 +76,7 @@ npm test
 
 ## WebMCP tools
 
-The browser entry point registers only the contracts valid for the current mission state. This excerpt is abridged from the browser implementation:
+The browser entry point registers only the contracts valid for the current mission state. Every contract publishes bounded input and result schemas. This excerpt is abridged from the browser implementation:
 
 ```js
 await document.modelContext.registerTool({

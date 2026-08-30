@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { z } from "zod";
 import { createMission } from "./engine.js";
 import { activeToolNames, toolContracts } from "./tool-contracts.js";
 
@@ -10,6 +11,9 @@ test("tool names are unique and use bounded schemas", () => {
     assert.match(tool.name, /^[a-z0-9_]{1,128}$/);
     assert.equal(tool.inputSchema.type, "object");
     assert.equal(tool.inputSchema.additionalProperties, false, tool.name);
+    assert.ok(tool.outputSchema, `${tool.name} must publish a result schema`);
+    assert.equal(tool.outputSchema.oneOf.length, 2, `${tool.name} must describe success and error results`);
+    assert.doesNotThrow(() => z.fromJSONSchema(tool.outputSchema), `${tool.name} result schema must compile`);
   }
 });
 
@@ -69,6 +73,7 @@ test("the clean-state lifecycle makes every declared browser tool reachable", ()
 test("the browser entrypoint uses the required WebMCP API", () => {
   const source = readFileSync(new URL("./app.js", import.meta.url), "utf8");
   assert.match(source, /document\.modelContext\.registerTool\(\{/);
+  assert.match(source, /outputSchema: contract\.outputSchema/);
   assert.match(source, /code, message, retryable/);
   assert.match(source, /nextAction/);
 });

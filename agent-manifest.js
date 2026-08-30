@@ -31,6 +31,7 @@ const toolContractOutputSchema = closedObject({
         },
         additionalProperties: true,
       },
+      outputSchema: { type: "object" },
       readOnlyHint: { type: "boolean" },
       untrustedContentHint: { type: "boolean" },
       annotations: closedObject({

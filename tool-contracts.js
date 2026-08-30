@@ -1,15 +1,116 @@
+const closedObject = (properties, required = Object.keys(properties)) => ({
+  type: "object",
+  properties,
+  required,
+  additionalProperties: false,
+});
+
+const nullable = (schema) => ({ anyOf: [schema, { type: "null" }] });
+const ruleNames = ["route", "date", "arrival", "cabin", "stops", "refundability", "price", "authority"];
+const ruleName = { type: "string", enum: ruleNames };
+const checksSchema = closedObject(Object.fromEntries(ruleNames.map((name) => [name, { type: "boolean" }])));
+const evidenceRecordSchema = closedObject({ stored: {}, offered: {} });
+const evidenceSchema = closedObject(Object.fromEntries(ruleNames.map((name) => [name, evidenceRecordSchema])));
+const evaluationSchema = closedObject({
+  decision: { type: "string", enum: ["authorized", "denied"] },
+  checks: checksSchema,
+  evidence: evidenceSchema,
+  failedRules: { type: "array", items: ruleName, uniqueItems: true, maxItems: ruleNames.length },
+  policyVersion: { type: "integer", minimum: 1 },
+  quoteVersion: { type: "integer", minimum: 0 },
+  offerId: { type: "string", minLength: 1, maxLength: 80 },
+  totalCents: { type: "integer", minimum: 0, maximum: 500000 },
+  currency: { const: "USD" },
+});
+const receiptSchema = closedObject({
+  id: { type: "string", minLength: 1, maxLength: 120 },
+  type: { type: "string", enum: ["authorization", "denial"] },
+  decision: { type: "string", enum: ["authorized", "denied"] },
+  missionId: { type: "string", minLength: 1, maxLength: 120 },
+  offerId: { type: "string", minLength: 1, maxLength: 80 },
+  policyVersion: { type: "integer", minimum: 1 },
+  quoteVersion: { type: "integer", minimum: 0 },
+  checks: checksSchema,
+  evidence: evidenceSchema,
+  failedRules: { type: "array", items: ruleName, uniqueItems: true, maxItems: ruleNames.length },
+  actor: { type: "string", minLength: 1, maxLength: 40 },
+  resolution: { type: "string", enum: ["purchase_allowed", "human_policy_change_required"] },
+  createdAt: { type: "string", format: "date-time" },
+});
+const bookingSchema = closedObject({
+  id: { type: "string", minLength: 1, maxLength: 120 },
+  status: { const: "ticketed" },
+  offerId: { type: "string", minLength: 1, maxLength: 80 },
+  totalCents: { type: "integer", minimum: 0, maximum: 500000 },
+  currency: { const: "USD" },
+  ticketNumber: { type: "string", pattern: "^999-[0-9]{10}$" },
+  supplierReference: { const: "WEBMCP" },
+  sandbox: { const: true },
+  authorizationReceipt: receiptSchema,
+  createdAt: { type: "string", format: "date-time" },
+});
+const offerSchema = closedObject({
+  origin: { type: "string", pattern: "^[A-Z]{3}$" },
+  destination: { type: "string", pattern: "^[A-Z]{3}$" },
+  currency: { const: "USD" },
+  id: { type: "string", minLength: 1, maxLength: 80 },
+  airline: { type: "string", minLength: 1, maxLength: 80 },
+  flight: { type: "string", minLength: 1, maxLength: 20 },
+  departure: { type: "string", minLength: 20, maxLength: 35 },
+  arrival: { type: "string", minLength: 20, maxLength: 35 },
+  stops: { type: "integer", minimum: 0, maximum: 2 },
+  cabin: { type: "string", enum: ["economy", "premium_economy"] },
+  refundable: { type: "boolean" },
+  totalCents: { type: "integer", minimum: 0, maximum: 500000 },
+  durationMinutes: { type: "integer", minimum: 1, maximum: 1440 },
+  supplierContent: { type: "string", minLength: 1, maxLength: 500 },
+}, ["origin", "destination", "currency", "id", "airline", "flight", "departure", "arrival", "stops", "cabin", "refundable", "totalCents", "durationMinutes"]);
+const offerEvaluationSchema = closedObject({ offer: offerSchema, evaluation: evaluationSchema });
+const missionSchema = closedObject({
+  id: { type: "string", minLength: 1, maxLength: 120 },
+  status: { type: "string", enum: ["ready", "offers_ready", "offer_selected", "quote_refreshed", "authorized", "denied", "ticketed", "authority_revoked"] },
+  origin: { type: "string", pattern: "^[A-Z]{3}$" },
+  destination: { type: "string", pattern: "^[A-Z]{3}$" },
+  departureDate: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+  arriveBefore: { type: "string", pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" },
+  permittedCabins: { type: "array", items: { type: "string", enum: ["economy", "premium_economy"] }, minItems: 1, maxItems: 2, uniqueItems: true },
+  maxStops: { type: "integer", minimum: 0, maximum: 2 },
+  refundableOnly: { type: "boolean" },
+  maxTotalCents: { type: "integer", minimum: 0, maximum: 500000 },
+  currency: { const: "USD" },
+  confirmationMode: { type: "string", enum: ["autonomous", "confirm_before_purchase"] },
+  authority: { type: "string", enum: ["active", "revoked"] },
+  expiresAt: { type: "string", format: "date-time" },
+  policyVersion: { type: "integer", minimum: 1 },
+  quoteVersion: { type: "integer", minimum: 0 },
+  selectedOfferId: nullable({ type: "string", minLength: 1, maxLength: 80 }),
+  decision: nullable({ type: "string", enum: ["authorized", "denied"] }),
+  booking: nullable(bookingSchema),
+});
+const toolErrorSchema = closedObject({
+  error: closedObject({
+    code: { type: "string", enum: ["invalid_input", "invalid_state", "policy_blocked", "quote_stale", "tool_failed"] },
+    message: { type: "string", minLength: 1, maxLength: 500 },
+    retryable: { type: "boolean" },
+    nextAction: { type: "string", minLength: 1, maxLength: 300 },
+  }),
+});
+const result = (successSchema) => ({ oneOf: [successSchema, toolErrorSchema] });
+
 export const toolContracts = Object.freeze([
   {
     name: "read_flight_mission",
-    description: "Read the active flight mission, its exact purchasing limits, current state, and safe booking status.",
+    description: "Read the active flight mission, its exact purchasing limits, current state, and safe booking status. Later lifecycle tools, including purchase_selected_offer, are registered only when the stored state makes them valid.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    outputSchema: result(missionSchema),
     readOnlyHint: true,
     untrustedContentHint: false,
   },
   {
     name: "search_flights",
-    description: "Search the challenge flight inventory using the active mission. The caller cannot expand the stored route or spending authority.",
+    description: "Search the exact route, date, fare rules, and purchase cap already stored in the active mission. This tool intentionally accepts no filters, so the caller cannot expand authority.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    outputSchema: result(closedObject({ missionId: { type: "string", minLength: 1, maxLength: 120 }, offers: { type: "array", items: offerEvaluationSchema, minItems: 0, maxItems: 20 } })),
     readOnlyHint: false,
     untrustedContentHint: true,
   },
@@ -26,6 +127,7 @@ export const toolContracts = Object.freeze([
       },
       additionalProperties: false,
     },
+    outputSchema: result(missionSchema),
     readOnlyHint: false,
     untrustedContentHint: false,
   },
@@ -33,6 +135,7 @@ export const toolContracts = Object.freeze([
     name: "compare_visible_offers",
     description: "Compare offers already visible in Mission Control and return application-side policy decisions for each.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    outputSchema: result({ type: "array", items: offerEvaluationSchema, minItems: 0, maxItems: 20 }),
     readOnlyHint: true,
     untrustedContentHint: true,
   },
@@ -40,6 +143,7 @@ export const toolContracts = Object.freeze([
     name: "select_offer",
     description: "Select one currently visible offer for purchase evaluation. This does not charge or book.",
     inputSchema: { type: "object", properties: { offerId: { type: "string", minLength: 1, maxLength: 80, pattern: "^[A-Za-z0-9_-]+$" } }, required: ["offerId"], additionalProperties: false },
+    outputSchema: result(offerEvaluationSchema),
     readOnlyHint: false,
     untrustedContentHint: true,
   },
@@ -47,6 +151,7 @@ export const toolContracts = Object.freeze([
     name: "refresh_selected_offer",
     description: "Refresh the selected offer before purchase and advance its application-controlled quote version.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    outputSchema: result(closedObject({ offer: offerSchema, quoteVersion: { type: "integer", minimum: 1 }, refreshed: { const: true } })),
     readOnlyHint: false,
     untrustedContentHint: true,
   },
@@ -54,6 +159,7 @@ export const toolContracts = Object.freeze([
     name: "evaluate_purchase",
     description: "Evaluate the selected offer against the stored route, fare, price, and authority policy. The agent cannot provide its own authorization decision.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    outputSchema: result(closedObject({ evaluation: evaluationSchema, receipt: receiptSchema })),
     readOnlyHint: false,
     untrustedContentHint: false,
   },
@@ -66,6 +172,7 @@ export const toolContracts = Object.freeze([
       required: ["idempotencyKey"],
       additionalProperties: false,
     },
+    outputSchema: result(closedObject({ booking: bookingSchema, replayed: { type: "boolean" } })),
     readOnlyHint: false,
     untrustedContentHint: false,
   },
@@ -73,13 +180,15 @@ export const toolContracts = Object.freeze([
     name: "get_booking_receipt",
     description: "Read the canonical sandbox booking receipt without passenger or payment data.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    outputSchema: result({ oneOf: [bookingSchema, closedObject({ status: { const: "not_booked" } })] }),
     readOnlyHint: true,
     untrustedContentHint: false,
   },
   {
     name: "revoke_purchase_authority",
-    description: "Revoke the active mission authority so future purchase attempts are denied.",
+    description: "Revoke the active mission authority so future purchase attempts are denied while prior receipts remain readable. A human can recover by replacing the mission authority.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    outputSchema: result(closedObject({ missionId: { type: "string", minLength: 1, maxLength: 120 }, authority: { const: "revoked" }, revoked: { const: true } })),
     readOnlyHint: false,
     untrustedContentHint: false,
   },

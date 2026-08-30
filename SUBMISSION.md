@@ -36,7 +36,7 @@ The agent reads the mandate, searches sandbox inventory, compares offers, select
 
 ## WebMCP implementation
 
-The page registers 10 tools with `document.modelContext.registerTool()`, bounded JSON Schemas, and accurate `readOnlyHint` and `untrustedContentHint` annotations. An `AbortController` removes the prior tool set when transaction state changes, then the page registers only the valid next actions. Human controls and WebMCP tools call the same application functions and persist state in versioned browser storage.
+The page registers 10 tools with `document.modelContext.registerTool()`, bounded input and result schemas, and accurate `readOnlyHint` and `untrustedContentHint` annotations. An `AbortController` removes the prior tool set when transaction state changes, then the page registers only the valid next actions. Human controls and WebMCP tools call the same application functions and persist state in versioned browser storage.
 
 We verified the complete lifecycle in ChatGPT desktop’s in-app browser and Chromium 151: adversarial denial, monotonic tightening, quote refresh, authorization, ticketing, replay, revocation, and receipt retrieval.
 
