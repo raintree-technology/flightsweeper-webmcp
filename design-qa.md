@@ -39,7 +39,7 @@ The mandate, lifecycle, offers empty state, and disclosure rows were compared cl
 - No browser warning or error logs were observed.
 - Destructive confirmations use the destructive alert-dialog variant; ordinary confirmations retain the primary variant.
 - No horizontal overflow was observed at 1280 desktop or 390 mobile widths.
-- Automated suite passes with 25 tests.
+- Automated suite passes with 44 tests.
 
 ## Comparison history
 
@@ -60,3 +60,19 @@ No actionable P0, P1, or P2 findings remain.
 - P3: Capture a clean browser-storage profile for the demo video so the collapsed Evidence count starts at zero.
 
 final result: passed
+
+## Raintree standards audit — August 30, 2026
+
+The judge path was recaptured from a clean browser origin and exercised through native WebMCP calls.
+
+- Entry state: `flightsweeper-standards-audit/01-fresh-mission.png`
+- Offers and policy fit: `flightsweeper-standards-audit/02-offers-ready.png`
+- Policy denial: `flightsweeper-standards-audit/03-policy-denial.png`
+- Original denial evidence: `flightsweeper-standards-audit/04-denial-evidence.png`
+- Revised denial evidence: `flightsweeper-standards-audit/06-denial-evidence-final.png`
+- Ticket, authorization, and denial history: `flightsweeper-standards-audit/07-ticket-replay-revoked.png`
+- Mobile ticket evidence: `flightsweeper-standards-audit/08-mobile-ticket-evidence.png`
+
+The audit found one material evidence gap: the visible denial receipt named the failed rule but did not show the stored requirement beside the offered value. The current receipt now states the rule evidence directly, for example, “Refundable required; offered restricted.” The same formatter covers route, date, arrival, cabin, stops, price, and authority failures. Automated tests cover refundability and price wording.
+
+The flow remained readable and operable through search, adversarial denial, mission tightening, quote refresh, authorization, ticketing, replay, revocation, and receipt retrieval. At a 390-by-844-pixel viewport, the ticket receipt reflowed without horizontal overflow. Transaction progress and canonical receipt changes now use polite atomic live regions. The screen-reader listening gate remains a human verification item; this audit does not claim WCAG conformance.

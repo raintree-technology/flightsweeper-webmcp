@@ -193,6 +193,12 @@ h2 { margin: 0; font-family: Georgia, serif; font-size: 29px; font-weight: 600; 
 .receipt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 .receipt-grid span { display: block; color: #b8c3bc; font-size: 11px; text-transform: uppercase; }
 .receipt-grid strong { display: block; margin-top: 5px; font-size: 15px; }
+.receipt-rule-evidence { margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.14); }
+.receipt-rule-evidence > strong { font-size: 13px; }
+.receipt-rule-evidence ul { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+.receipt-rule-evidence li { display: grid; grid-template-columns: minmax(100px,.35fr) 1fr; gap: 18px; align-items: baseline; }
+.receipt-rule-evidence li span { color: #b8c3bc; font-size: 11px; text-transform: uppercase; }
+.receipt-rule-evidence li strong { font-size: 14px; }
 .receipt-history { display: grid; gap: 10px; margin-top: 18px; }
 .history-empty { margin: 0; padding: 20px; border: 1px dashed var(--line-strong); border-radius: var(--radius); background: rgba(255,255,255,.26); color: var(--muted); font-size: 13px; line-height: 1.55; text-align: center; }
 .history-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: #fffefa; }
@@ -221,6 +227,7 @@ footer a:hover { color: rgba(255,255,255,.82); }
   .offer { grid-template-columns: 1fr 1fr; }
   .offer-price { text-align: left; }
   .receipt-grid { grid-template-columns: 1fr 1fr; }
+  .receipt-rule-evidence li { grid-template-columns: 1fr; gap: 4px; }
   .ownership-strip { align-items: flex-start; flex-direction: column; }
   .storage-row { align-items: flex-start; flex-direction: column; }
 }

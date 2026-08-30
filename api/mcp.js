@@ -1,24 +1,27 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { callRemoteTool, remoteTools } from "../agent-manifest.js";
+import { callRemoteTool, remoteOutputSchemas, remoteTools } from "../agent-manifest.js";
 
 const MAX_BODY_BYTES = 32768;
 const RATE_LIMIT = 30;
 const WINDOW_MS = 60_000;
 const MAX_RATE_LIMIT_KEYS = 10_000;
 const requestWindows = new Map();
-const jsonValue = z.lazy(() => z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(jsonValue), z.record(z.string(), jsonValue)]));
-const structuredOutput = z.object({}).catchall(jsonValue);
 const CORS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "POST, OPTIONS",
-  "access-control-allow-headers": "accept, content-type, mcp-protocol-version",
-  "access-control-expose-headers": "mcp-protocol-version",
+  "access-control-allow-headers": "accept, content-type, mcp-protocol-version, x-request-id",
+  "access-control-expose-headers": "mcp-protocol-version, retry-after, x-ratelimit-limit, x-ratelimit-remaining, x-ratelimit-reset, x-request-id",
   "cache-control": "no-store",
   "content-type": "application/json; charset=utf-8",
   "x-content-type-options": "nosniff",
 };
+
+export const remoteOutputValidators = Object.freeze(Object.fromEntries(
+  Object.entries(remoteOutputSchemas).map(([name, schema]) => [name, z.fromJSONSchema(schema)]),
+));
 
 export const config = { api: { bodyParser: false } };
 
@@ -45,7 +48,7 @@ function createServer() {
       title: title(tool.name),
       description: tool.description,
       inputSchema: z.object({}).strict(),
-      outputSchema: structuredOutput,
+      outputSchema: remoteOutputValidators[tool.name],
       annotations: tool.annotations,
     }, async () => {
       const structuredContent = callRemoteTool(tool.name);
@@ -53,6 +56,11 @@ function createServer() {
     });
   }
   return server;
+}
+
+function requestId(req) {
+  const supplied = String(req.headers["x-request-id"] ?? "");
+  return /^[A-Za-z0-9._:-]{1,64}$/.test(supplied) ? supplied : randomUUID();
 }
 
 function rateLimitKey(req) {
@@ -87,7 +95,10 @@ function rateHeaders(rate, includeRetryAfter = false) {
 }
 
 async function readJsonBody(req) {
-  if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) return req.body;
+  if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) {
+    if (Buffer.byteLength(JSON.stringify(req.body)) > MAX_BODY_BYTES) throw Object.assign(new Error("Request body exceeds 32 KiB"), { status: 413, code: -32600 });
+    return req.body;
+  }
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
@@ -106,12 +117,13 @@ async function readJsonBody(req) {
 }
 
 export default async function handler(req, res) {
+  const correlationId = requestId(req);
+  applyHeaders(res, { "x-request-id": correlationId });
   if (req.method === "OPTIONS") {
-    applyHeaders(res);
     return res.status(204).end();
   }
-  if (req.method !== "POST") return send(res, 405, { jsonrpc: "2.0", id: null, error: { code: -32600, message: "Method not allowed" } });
-  if (process.env.MCP_PUBLIC_DISABLED === "1") return send(res, 503, { jsonrpc: "2.0", id: null, error: { code: -32003, message: "Public MCP is temporarily disabled" } });
+  if (req.method !== "POST") return send(res, 405, { jsonrpc: "2.0", id: null, error: { code: -32600, message: "Method not allowed" } }, { allow: "POST, OPTIONS" });
+  if (process.env.MCP_PUBLIC_DISABLED === "1") return send(res, 503, { jsonrpc: "2.0", id: null, error: { code: -32003, message: "Public MCP is temporarily disabled" } }, { "retry-after": "60" });
   const origin = req.headers.origin;
   if (origin && origin !== "https://flightsweeper-webmcp.vercel.app") return send(res, 403, { jsonrpc: "2.0", id: null, error: { code: -32004, message: "Origin is not allowed" } });
   const host = String(req.headers.host ?? "").split(":")[0];
@@ -131,6 +143,11 @@ export default async function handler(req, res) {
   applyHeaders(res, limitHeaders);
   const server = createServer();
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
-  await server.connect(transport);
-  await transport.handleRequest(req, res, body);
+  try {
+    await server.connect(transport);
+    await transport.handleRequest(req, res, body);
+  } catch (error) {
+    console.error("Public MCP request failed", { requestId: correlationId, message: error instanceof Error ? error.message : "Unknown error" });
+    if (!res.headersSent) return send(res, 500, { jsonrpc: "2.0", id: body?.id ?? null, error: { code: -32603, message: "Internal error" } }, limitHeaders);
+  }
 }

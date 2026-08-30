@@ -1,4 +1,4 @@
-import { createDecisionReceipt, createMission, evaluateOffer, purchase, replaceMissionPolicy, searchOffers, tightenMission } from "./engine.js";
+import { createDecisionReceipt, createMission, describeRuleEvidence, evaluateOffer, purchase, replaceMissionPolicy, searchOffers, tightenMission } from "./engine.js";
 import { createAppState, parseStoredState, replaceCurrentMission, serializeState, STORAGE_KEY } from "./state.js";
 import { activeToolNames, toolContracts } from "./tool-contracts.js";
 
@@ -266,6 +266,18 @@ function renderCurrentReceipt() {
   const grid = document.createElement("div"); grid.className = "receipt-grid";
   for (const [label, value] of fields) { const field = document.createElement("div"); const name = document.createElement("span"); name.textContent = label; const data = document.createElement("strong"); data.textContent = value; field.append(name, data); grid.append(field); }
   nodes.receipt.append(eyebrow, heading, grid);
+  if (!booking && current.failedRules.length) {
+    const evidence = document.createElement("div"); evidence.className = "receipt-rule-evidence";
+    const evidenceTitle = document.createElement("strong"); evidenceTitle.textContent = "Why this purchase was blocked";
+    const list = document.createElement("ul");
+    for (const rule of current.failedRules) {
+      const item = document.createElement("li");
+      const name = document.createElement("span"); name.textContent = rule;
+      const detail = document.createElement("strong"); detail.textContent = describeRuleEvidence(rule, current.evidence);
+      item.append(name, detail); list.append(item);
+    }
+    evidence.append(evidenceTitle, list); nodes.receipt.append(evidence);
+  }
 }
 
 function renderControls() {

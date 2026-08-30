@@ -10,6 +10,8 @@ This is a public sandbox with a static browser application and small MCP API end
 - [x] Policy authorization, denial, expiration, revocation, tightening, evidence invalidation, quote freshness, human confirmation, and repeat safety are covered.
 - [x] Adversarial supplier content cannot alter policy inputs.
 - [x] WebMCP schemas are bounded and state exposure is contract-tested.
+- [x] Remote MCP initialization, version negotiation, tool discovery, input rejection, and structured output pass through the real Streamable HTTP transport.
+- [x] Public API request size, anonymous defensive throttling, correlation, origin, credential, method, cache-header, and CORS behavior are contract-tested.
 - [x] Secret scan reports no credentials or private data.
 - [x] Deployment configuration requires HTTPS transport security, CSP, a least-capability Permissions Policy, `Referrer-Policy`, and `X-Content-Type-Options`.
 - [x] Public privacy, security, contributor, provenance, and standards-boundary documents are present and contract-tested.
@@ -45,6 +47,8 @@ This is a public sandbox with a static browser application and small MCP API end
 Do not describe unchecked manual gates as verified. The accountable submitter owns the final native-browser and accessibility acceptance run.
 
 The checked browser and transaction gates were repeated against the public deployment where noted. The browser application uses the documented storage key and contains no outbound data client; its network authority remains constrained to same-origin endpoints by the deployed content security policy.
+
+The remote MCP remains anonymous and read-only. Its in-memory request limiter is a per-instance defensive bound, not a distributed quota or availability guarantee. `API.md` records the exact operations, schemas, cache behavior, errors, limits, supported protocol versions, and compatibility policy.
 
 The local candidate exposes expected headings, landmarks, control names, states, descriptions, validation focus, and live regions through macOS accessibility APIs. On August 28, 2026, VoiceOver was enabled for a structural navigation pass against the public app and then returned to its prior off state. The environment could inspect VoiceOver-exposed structure but could not hear synthesized speech, so a short human listening confirmation remains required before checking the screen-reader gate.
 

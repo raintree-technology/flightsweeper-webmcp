@@ -94,6 +94,8 @@ test("the public document declares identity, discovery, and truthful example sta
   assert.match(document, /href="\.\/privacy\.html">Privacy<\/a>/);
   assert.match(document, /Selecting “Create a flight mission,”[\s\S]*?means you agree to the/);
   assert.match(document, /acknowledge the <a href="\.\/privacy\.html">Privacy Policy<\/a>/);
+  assert.match(document, /class="next-action" aria-live="polite" aria-atomic="true"/);
+  assert.match(document, /class="receipt" id="receipt" aria-live="polite" aria-atomic="true"/);
   assert.doesNotMatch(document, /> Live sandbox</);
 });
 
@@ -121,7 +123,7 @@ test("public legal pages are scoped to the sandbox and identify the operator", (
 });
 
 test("public governance documents preserve the challenge trust boundary", () => {
-  const requiredDocuments = ["README.md", "SECURITY.md", "PRIVACY.md", "CONTRIBUTING.md", "STANDARDS.md", "LEGAL_REVIEW.md", "ASSET_PROVENANCE.md", "RELEASE_CHECKLIST.md"];
+  const requiredDocuments = ["README.md", "API.md", "SECURITY.md", "PRIVACY.md", "CONTRIBUTING.md", "STANDARDS.md", "LEGAL_REVIEW.md", "ASSET_PROVENANCE.md", "RELEASE_CHECKLIST.md"];
   for (const path of requiredDocuments) {
     assert.doesNotThrow(() => readFileSync(new URL(`./${path}`, import.meta.url), "utf8"), path);
   }

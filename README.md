@@ -1,20 +1,31 @@
 # FlightSweeper WebMCP Challenge Edition
 
-Browser agents can execute purchases. They should not decide what they are allowed to buy.
+FlightSweeper lets a browser agent complete a sandbox flight purchase without letting the model set its own authority.
 
-FlightSweeper gives a browser agent exact, revocable authority to complete a sandbox flight purchase. The traveler sets the mandate. The agent searches and executes. FlightSweeper independently approves or denies the exact transaction and records why.
+The traveler sets exact, revocable limits. The agent searches and executes. FlightSweeper independently approves or denies the transaction and records why.
+
+**Project:** Public, MIT-licensed WebMCP Challenge sandbox for judges and developers evaluating delegated transactions
+
+**Status:** Submitted on August 28, 2026; available for public evaluation
 
 **Live challenge app:** [flightsweeper-webmcp.vercel.app](https://flightsweeper-webmcp.vercel.app)
 
-**Public source:** [github.com/raintree-technology/flightsweeper-webmcp](https://github.com/raintree-technology/flightsweeper-webmcp)
+**Source:** [github.com/raintree-technology/flightsweeper-webmcp](https://github.com/raintree-technology/flightsweeper-webmcp)
+
+**Submitted project:** [FlightSweeper on Devpost](https://devpost.com/software/flightsweeper)
+
+**Demo:** [Watch the 2:23 public video](https://youtu.be/pBOZ6nnwNKs)
 
 This challenge edition never creates a real charge or airline order. It contains no production FlightSweeper credentials, customer data, or private provider implementation. FinSync LLC operates FlightSweeper and is registered as a California Seller of Travel, CST 2172984-70. Registration as a seller of travel does not constitute approval by the State of California.
 
-## Judge it in 60 seconds
+## Try the core flow
 
-1. Open the [live challenge app](https://flightsweeper-webmcp.vercel.app) in ChatGPT desktop’s in-app browser or Chrome 149+ with WebMCP enabled.
-2. Send the prompt below. Watch the same transaction change on the page as the agent calls the registered tools.
-3. Open the evidence drawer to inspect the denial, authorization, ticket, and replay records.
+**Prerequisite:** Use ChatGPT desktop’s in-app browser or Chrome 149+ with WebMCP enabled.
+
+1. Open the [live challenge app](https://flightsweeper-webmcp.vercel.app).
+2. Send the prompt below to the browser agent.
+3. Watch the mission, offer, and evidence states change as the agent calls the registered tools.
+4. Open **Activity** and **Evidence** to inspect the denial, authorization, ticket, and replay records.
 
 > Read the active flight mission and search for flights. Compare the visible offers. Select and evaluate the non-refundable Meridian offer, then explain why FlightSweeper denied it. Tighten the mission to nonstop, select Coast Air, refresh and evaluate it, then purchase it with idempotency key `judge-demo-1`. Repeat the purchase, revoke future authority, and retrieve the booking receipt.
 
@@ -34,7 +45,7 @@ The webpage, traveler, and agent share one transaction state. The traveler can r
 
 One sandbox supplier result includes an adversarial instruction. Provider-backed tools mark their content untrusted, and the application policy engine independently rejects the offer because it violates the stored mandate.
 
-The challenge edition simulates the transaction rail. Its authority, policy, quote-binding, revocation, and idempotency controls are the same safeguards required before connecting a real purchasing provider.
+The challenge edition isolates the transaction rail. It demonstrates authority, policy, quote-binding, revocation, and idempotency controls. A live provider connection would require additional provider, payment, identity, operational, and regulatory controls.
 
 ```mermaid
 flowchart LR
@@ -65,7 +76,7 @@ npm test
 
 ## WebMCP tools
 
-The browser entry point registers only the contracts valid for the current mission state. This excerpt is abridged from the production challenge code:
+The browser entry point registers only the contracts valid for the current mission state. This excerpt is abridged from the browser implementation:
 
 ```js
 await document.modelContext.registerTool({
@@ -120,6 +131,7 @@ See [SUBMISSION.md](SUBMISSION.md) for the Devpost description and demo sequence
 ## Challenge evidence
 
 - [Agent task and authority contract](AGENT_CONTRACT.md)
+- [Public agent API contract](API.md)
 - [Asset provenance](ASSET_PROVENANCE.md)
 - [Release and accessibility checklist](RELEASE_CHECKLIST.md)
 - [Raintree standards application](STANDARDS.md)

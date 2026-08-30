@@ -10,9 +10,9 @@ Public demo video: https://youtu.be/pBOZ6nnwNKs
 
 ## Project description
 
-Browser agents can execute purchases. They should not decide what they are allowed to buy.
+FlightSweeper lets a browser agent complete a sandbox flight purchase without letting the model set its own authority.
 
-FlightSweeper gives a browser agent exact, revocable authority to complete a sandbox flight purchase. The traveler sets the mandate. The agent searches and executes. FlightSweeper independently approves or denies the exact transaction and records why.
+The traveler sets exact, revocable limits. The agent searches and executes. FlightSweeper independently approves or denies the transaction and records why.
 
 ## Why WebMCP
 
@@ -20,7 +20,7 @@ Traditional browser agents infer controls from the visual interface and can carr
 
 The division of responsibility is explicit: the human owns authority, the agent owns search and execution, suppliers own inventory, and FlightSweeper owns policy and transaction evidence.
 
-## What people and agents can do together
+## What the traveler and agent do together
 
 The traveler defines the route, date, arrival deadline, cabin, connections, refundability, purchase cap, and execution mode. A human can replace or expand that authority. An agent can only narrow it. The traveler can revoke future authority at any time.
 
@@ -28,7 +28,7 @@ The agent reads the mandate, searches sandbox inventory, compares offers, select
 
 ## Three transaction proofs
 
-**Adversarial content is contained.** One supplier result instructs the agent to ignore the traveler’s refundability rule. FlightSweeper marks provider-backed output as untrusted and independently denies the offer against the stored mandate.
+**Adversarial content is contained.** One supplier result contains text that tells the agent to ignore the traveler’s refundability rule. FlightSweeper marks provider-backed output as untrusted and independently denies the offer against the stored mandate.
 
 **The model cannot authorize itself.** Tool callers provide mission, offer, and idempotency identifiers—not price, passenger, payment, or authorization claims. FlightSweeper reloads the stored mission and exact quote before every consequential decision.
 
@@ -42,9 +42,9 @@ We verified the complete lifecycle in ChatGPT desktop’s in-app browser and Chr
 
 ## What we built during the challenge
 
-FlightSweeper existed before August 25. During the submission period, we built this public, self-contained WebMCP Challenge Edition: the sandbox inventory, state-aware tool surface, authority and policy engine, adversarial fixture, durable evidence, repeat-safe ticketing, browser interface, tests, documentation, and deployment. Production FlightSweeper remains private and unchanged.
+Production FlightSweeper existed before the challenge. After the August 25, 2026 kickoff, we built this public, self-contained WebMCP Challenge Edition: the sandbox inventory, state-aware tool surface, authority and policy engine, adversarial fixture, durable evidence, repeat-safe ticketing, browser interface, tests, documentation, and deployment. Production FlightSweeper remains private and unchanged.
 
-The challenge edition simulates the transaction rail and never charges a card or creates an airline order. Its authority, policy, quote-binding, revocation, and idempotency controls are the same safeguards required before connecting a real purchasing provider.
+The challenge edition isolates the transaction rail and never charges a card or creates an airline order. It demonstrates authority, policy, quote-binding, revocation, and idempotency controls. A live provider connection would require additional provider, payment, identity, operational, and regulatory controls.
 
 FinSync LLC operates FlightSweeper and is registered as a California Seller of Travel, CST 2172984-70. Registration as a seller of travel does not constitute approval by the State of California.
 

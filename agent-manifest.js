@@ -4,6 +4,72 @@ export const SITE_URL = "https://flightsweeper-webmcp.vercel.app";
 export const MCP_VERSION = "2025-11-25";
 export const MCP_VERSIONS = Object.freeze([MCP_VERSION, "2025-06-18"]);
 
+const closedObject = (properties, required = Object.keys(properties)) => ({
+  type: "object",
+  properties,
+  required,
+  additionalProperties: false,
+});
+
+const toolContractOutputSchema = closedObject({
+  state: { const: "browser-local" },
+  tools: {
+    type: "array",
+    minItems: toolContracts.length,
+    maxItems: toolContracts.length,
+    items: closedObject({
+      name: { type: "string", minLength: 1, maxLength: 80 },
+      description: { type: "string", minLength: 1, maxLength: 500 },
+      inputSchema: {
+        type: "object",
+        required: ["type", "properties", "additionalProperties"],
+        properties: {
+          type: { const: "object" },
+          properties: { type: "object" },
+          required: { type: "array", items: { type: "string" } },
+          additionalProperties: { const: false },
+        },
+        additionalProperties: true,
+      },
+      readOnlyHint: { type: "boolean" },
+      untrustedContentHint: { type: "boolean" },
+      annotations: closedObject({
+        readOnlyHint: { type: "boolean" },
+        destructiveHint: { const: false },
+        openWorldHint: { const: false },
+        untrustedContentHint: { type: "boolean" },
+      }),
+    }),
+  },
+  lifecycle: { type: "string", minLength: 1, maxLength: 200 },
+});
+
+export const remoteOutputSchemas = Object.freeze({
+  get_challenge_capabilities: closedObject({
+    name: { const: "FlightSweeper WebMCP Challenge Edition" },
+    mode: { const: "synthetic sandbox" },
+    webmcpToolCount: { type: "integer", minimum: 0, maximum: 20 },
+    remoteMcpToolCount: { type: "integer", minimum: 0, maximum: 20 },
+    realTransactions: { const: false },
+    canonicalUrl: { type: "string", format: "uri" },
+  }),
+  get_flight_tool_contracts: toolContractOutputSchema,
+  get_sandbox_inventory: closedObject({
+    kind: { const: "deterministic synthetic fixtures" },
+    routes: { type: "array", minItems: 1, maxItems: 1, items: { const: "LAX-JFK" } },
+    supplierConnectivity: { const: false },
+    containsPersonalData: { const: false },
+    caveat: { type: "string", minLength: 1, maxLength: 200 },
+  }),
+  get_safety_model: closedObject({
+    authority: { type: "string", minLength: 1, maxLength: 200 },
+    policy: { type: "string", minLength: 1, maxLength: 200 },
+    idempotency: { type: "string", minLength: 1, maxLength: 200 },
+    revocation: { type: "string", minLength: 1, maxLength: 200 },
+    privacy: { type: "string", minLength: 1, maxLength: 200 },
+  }),
+});
+
 export const remoteTools = Object.freeze([
   {
     name: "get_challenge_capabilities",
@@ -29,7 +95,7 @@ export const remoteTools = Object.freeze([
   ...tool,
   description: `Use this when an agent needs to ${tool.description.charAt(0).toLowerCase()}${tool.description.slice(1)} Do not use it for real travel transactions or private data.`,
   title: tool.name.split("_").map((part) => `${part[0].toUpperCase()}${part.slice(1)}`).join(" "),
-  outputSchema: { type: "object", additionalProperties: true },
+  outputSchema: remoteOutputSchemas[tool.name],
   annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false, untrustedContentHint: false },
 })));
 
@@ -53,7 +119,7 @@ export function publicAgentManifest() {
       lifecycle: "Only tools valid for the current mission state are registered.",
     },
     mcp: { transport: `${SITE_URL}/mcp`, protocolVersion: MCP_VERSION, protocolVersions: MCP_VERSIONS, tools: remoteTools },
-    modified: "2026-08-26",
+    modified: "2026-08-30",
   };
 }
 

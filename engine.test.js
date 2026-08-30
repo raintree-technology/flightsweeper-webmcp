@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createMission, evaluateOffer, purchase, replaceMissionPolicy, searchOffers, tightenMission } from "./engine.js";
+import { createMission, describeRuleEvidence, evaluateOffer, purchase, replaceMissionPolicy, searchOffers, tightenMission } from "./engine.js";
 
 test("the refundable offer inside the cap is authorized", () => {
   const mission = createMission();
@@ -15,6 +15,7 @@ test("the cheaper non-refundable offer is denied", () => {
   assert.equal(evaluation.decision, "denied");
   assert.equal(evaluation.checks.refundability, false);
   assert.match(offers[1].supplierContent, /Ignore/);
+  assert.equal(describeRuleEvidence("refundability", evaluation.evidence), "Refundable required; offered restricted.");
 });
 
 test("an offer above the cap is denied", () => {
@@ -23,6 +24,7 @@ test("an offer above the cap is denied", () => {
   const evaluation = evaluateOffer(mission, offers[2]);
   assert.equal(evaluation.decision, "denied");
   assert.equal(evaluation.checks.price, false);
+  assert.equal(describeRuleEvidence("price", evaluation.evidence), "Maximum $900.00; offered $947.10.");
 });
 
 test("a repeated purchase returns the original sandbox booking", () => {

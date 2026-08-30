@@ -95,6 +95,19 @@ export function createDecisionReceipt(mission, offer, evaluation, actor = "polic
   return { id: id(evaluation.decision === "authorized" ? "authorization" : "denial"), type: evaluation.decision === "authorized" ? "authorization" : "denial", decision: evaluation.decision, missionId: mission.id, offerId: offer.id, policyVersion: evaluation.policyVersion, quoteVersion: evaluation.quoteVersion, checks: evaluation.checks, evidence: evaluation.evidence, failedRules: evaluation.failedRules, actor, resolution: evaluation.decision === "authorized" ? "purchase_allowed" : "human_policy_change_required", createdAt: new Date().toISOString() };
 }
 
+export function describeRuleEvidence(rule, evidence) {
+  const record = evidence?.[rule];
+  if (!record) return "Stored and offered values are unavailable.";
+  if (rule === "route" || rule === "date") return `Required ${record.stored}; offered ${record.offered}.`;
+  if (rule === "arrival") return `Arrive by ${record.stored}; offered ${record.offered}.`;
+  if (rule === "cabin") return `Allowed ${record.stored.join(" or ").replaceAll("_", " ")}; offered ${String(record.offered).replaceAll("_", " ")}.`;
+  if (rule === "stops") return `Maximum ${record.stored}; offered ${record.offered}.`;
+  if (rule === "refundability") return `${record.stored ? "Refundable required" : "Any disclosed fare allowed"}; offered ${record.offered ? "refundable" : "restricted"}.`;
+  if (rule === "price") return `Maximum ${(record.stored.cents / 100).toLocaleString("en-US", { style: "currency", currency: record.stored.currency })}; offered ${(record.offered.cents / 100).toLocaleString("en-US", { style: "currency", currency: record.offered.currency })}.`;
+  if (rule === "authority") return `Authority ${record.stored}; offered state ${record.offered}.`;
+  return `Stored ${String(record.stored)}; offered ${String(record.offered)}.`;
+}
+
 export function tightenMission(mission, changes) {
   const next = {};
   if (changes.maxTotalCents !== undefined) {

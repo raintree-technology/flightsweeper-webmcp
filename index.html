@@ -132,7 +132,7 @@
         </section>
 
         <section class="lifecycle" aria-label="Transaction progress">
-          <div class="next-action"><div><strong id="next-action-title">Next: search the sandbox</strong><span id="next-action-detail">Start here when WebMCP is unavailable.</span></div>
+          <div class="next-action" aria-live="polite" aria-atomic="true"><div><strong id="next-action-title">Next: search the sandbox</strong><span id="next-action-detail">Start here when WebMCP is unavailable.</span></div>
             <span class="status-pill" id="mission-status">Ready</span>
           </div>
           <div class="controls" aria-label="Manual demo controls">
@@ -155,7 +155,7 @@
         <div class="offers" id="offers"></div>
       </section>
 
-      <section class="receipt" id="receipt" hidden></section>
+      <section class="receipt" id="receipt" aria-live="polite" aria-atomic="true" hidden></section>
 
       <section class="transaction-disclosures">
         <details><summary><span>Activity</span><span>Latest actions</span></summary><ol class="timeline" id="timeline" aria-live="polite"></ol></details>
