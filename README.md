@@ -1,14 +1,28 @@
 # FlightSweeper WebMCP Challenge Edition
 
-A self-contained, experimental reference experience for bounded, agent-operated flight purchasing through WebMCP, built for [The WebMCP Challenge](https://webmcp.devpost.com/). It is for judges, browser-tool builders, and developers exploring delegated transactions.
+Browser agents can execute purchases. They should not decide what they are allowed to buy.
+
+FlightSweeper gives a browser agent exact, revocable authority to complete a sandbox flight purchase. The traveler sets the mandate. The agent searches and executes. FlightSweeper independently approves or denies the exact transaction and records why.
 
 **Live challenge app:** [flightsweeper-webmcp.vercel.app](https://flightsweeper-webmcp.vercel.app)
 
 **Public source:** [github.com/raintree-technology/flightsweeper-webmcp](https://github.com/raintree-technology/flightsweeper-webmcp)
 
-The traveler defines a flight mission and a maximum purchasing mandate. An agent can search sandbox inventory, compare offers, select an itinerary, evaluate the purchase against application-side policy, and issue an idempotent sandbox ticket while the traveler watches the same transaction state on the page.
-
 This challenge edition never creates a real charge or airline order. It contains no production FlightSweeper credentials, customer data, or private provider implementation. FinSync LLC operates FlightSweeper and is registered as a California Seller of Travel, CST 2172984-70. Registration as a seller of travel does not constitute approval by the State of California.
+
+## Judge it in 60 seconds
+
+1. Open the [live challenge app](https://flightsweeper-webmcp.vercel.app) in ChatGPT desktop’s in-app browser or Chrome 149+ with WebMCP enabled.
+2. Send the prompt below. Watch the same transaction change on the page as the agent calls the registered tools.
+3. Open the evidence drawer to inspect the denial, authorization, ticket, and replay records.
+
+> Read the active flight mission and search for flights. Compare the visible offers. Select and evaluate the non-refundable Meridian offer, then explain why FlightSweeper denied it. Tighten the mission to nonstop, select Coast Air, refresh and evaluate it, then purchase it with idempotency key `judge-demo-1`. Repeat the purchase, revoke future authority, and retrieve the booking receipt.
+
+What this proves:
+
+- Untrusted supplier instructions cannot override the traveler’s stored rules.
+- The agent can narrow authority but cannot grant itself more.
+- A repeated purchase returns the original sandbox ticket instead of creating another transaction.
 
 ## What is new for the challenge
 
@@ -19,6 +33,8 @@ The public challenge edition was created for the WebMCP Challenge after its Augu
 The webpage, traveler, and agent share one transaction state. The traveler can replace or expand authority through the human interface. The agent can only narrow it. Tools appear and disappear as the mission moves from draft to search, selection, authorization, and ticketing.
 
 One sandbox supplier result includes an adversarial instruction. Provider-backed tools mark their content untrusted, and the application policy engine independently rejects the offer because it violates the stored mandate.
+
+The challenge edition simulates the transaction rail. Its authority, policy, quote-binding, revocation, and idempotency controls are the same safeguards required before connecting a real purchasing provider.
 
 ```mermaid
 flowchart LR
@@ -48,6 +64,27 @@ npm test
 ```
 
 ## WebMCP tools
+
+The browser entry point registers only the contracts valid for the current mission state. This excerpt is abridged from the production challenge code:
+
+```js
+await document.modelContext.registerTool({
+  name: contract.name,
+  description: contract.description,
+  inputSchema: contract.inputSchema,
+  annotations: {
+    readOnlyHint: contract.readOnlyHint,
+    untrustedContentHint: contract.untrustedContentHint,
+  },
+  async execute(rawInput) {
+    return toolResult(
+      await toolExecutors[contract.name](normalizeInput(rawInput)),
+    );
+  },
+}, { signal: toolController.signal });
+```
+
+See the complete registration lifecycle in [`app.js`](app.js) and the bounded contracts in [`tool-contracts.js`](tool-contracts.js).
 
 - `read_flight_mission`
 - `search_flights`
