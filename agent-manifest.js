@@ -57,7 +57,8 @@ export const remoteOutputSchemas = Object.freeze({
   get_flight_tool_contracts: toolContractOutputSchema,
   get_sandbox_inventory: closedObject({
     kind: { const: "deterministic synthetic fixtures" },
-    routes: { type: "array", minItems: 1, maxItems: 1, items: { const: "LAX-JFK" } },
+    routeMode: { const: "generated for the active browser mission" },
+    defaultRoute: { const: "LAX-JFK" },
     supplierConnectivity: { const: false },
     containsPersonalData: { const: false },
     caveat: { type: "string", minLength: 1, maxLength: 200 },
@@ -135,7 +136,8 @@ const capabilities = {
 
 const inventory = {
   kind: "deterministic synthetic fixtures",
-  routes: ["LAX-JFK"],
+  routeMode: "generated for the active browser mission",
+  defaultRoute: "LAX-JFK",
   supplierConnectivity: false,
   containsPersonalData: false,
   caveat: "Inventory is illustrative and must not be used for real travel decisions.",

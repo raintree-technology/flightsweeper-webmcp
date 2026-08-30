@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createMission, describeRuleEvidence, evaluateOffer, purchase, replaceMissionPolicy, searchOffers, tightenMission } from "./engine.js";
+import { createDecisionReceipt, createMission, describeRuleEvidence, evaluateOffer, purchase, replaceMissionPolicy, searchOffers, tightenMission } from "./engine.js";
+
+function authorizeSelectedOffer(mission) {
+  const offer = mission.offers.find((candidate) => candidate.id === mission.selectedOfferId);
+  const evaluation = evaluateOffer(mission, offer);
+  mission.evaluatedDecision = evaluation;
+  mission.decisionReceipt = createDecisionReceipt(mission, offer, evaluation);
+  mission.status = "authorized";
+}
 
 test("the refundable offer inside the cap is authorized", () => {
   const mission = createMission();
@@ -32,6 +40,7 @@ test("a repeated purchase returns the original sandbox booking", () => {
   mission.offers = searchOffers(mission);
   mission.selectedOfferId = mission.offers[0].id;
   mission.quoteVersion = 1;
+  authorizeSelectedOffer(mission);
   const first = purchase(mission, "demo-purchase");
   mission.authority = "revoked";
   const second = purchase(mission, "demo-purchase");
@@ -76,6 +85,12 @@ test("expired authority is denied", () => {
   assert.equal(evaluation.checks.authority, false);
 });
 
+test("human policy rejects impossible dates and unsupported cabin values", () => {
+  assert.throws(() => createMission({ departureDate: "2026-02-31" }), /Departure date/);
+  assert.throws(() => createMission({ permittedCabins: ["economy", "first"] }), /valid cabin policy/);
+  assert.throws(() => createMission({ permittedCabins: ["economy", "economy"] }), /valid cabin policy/);
+});
+
 test("human policy replacement may expand authority and invalidates transaction evidence", () => {
   const mission = createMission();
   mission.offers = searchOffers(mission);
@@ -89,6 +104,7 @@ test("human policy replacement may expand authority and invalidates transaction 
   assert.equal(mission.selectedOfferId, null);
   assert.equal(mission.quoteVersion, 0);
   assert.equal(mission.evaluatedDecision, null);
+  assert.ok(new Date(mission.expiresAt) > new Date());
 });
 
 test("purchase requires a refreshed quote", () => {
@@ -98,11 +114,24 @@ test("purchase requires a refreshed quote", () => {
   assert.throws(() => purchase(mission, "stale-quote"), /Refresh/);
 });
 
+test("purchase requires current authorization bound to the selected quote", () => {
+  const mission = createMission();
+  mission.offers = searchOffers(mission);
+  mission.selectedOfferId = mission.offers[0].id;
+  mission.quoteVersion = 1;
+  assert.throws(() => purchase(mission, "missing-evaluation"), /Evaluate the current policy/);
+
+  authorizeSelectedOffer(mission);
+  mission.offers[0].totalCents += 100;
+  assert.throws(() => purchase(mission, "changed-after-evaluation"), /Evaluate the current policy/);
+});
+
 test("confirmation mode blocks autonomous execution", () => {
   const mission = createMission({ confirmationMode: "confirm_before_purchase" });
   mission.offers = searchOffers(mission);
   mission.selectedOfferId = mission.offers[0].id;
   mission.quoteVersion = 1;
+  authorizeSelectedOffer(mission);
   assert.throws(() => purchase(mission, "confirmation-required"), /human confirmation/);
   assert.equal(purchase(mission, "confirmation-required", { humanConfirmed: true }).booking.status, "ticketed");
 });
@@ -112,16 +141,30 @@ test("a ticketed mission returns its original booking for a different retry key"
   mission.offers = searchOffers(mission);
   mission.selectedOfferId = mission.offers[0].id;
   mission.quoteVersion = 1;
+  authorizeSelectedOffer(mission);
   const first = purchase(mission, "first-attempt");
   const retry = purchase(mission, "ambiguous-client-retry");
   assert.equal(retry.replayed, true);
   assert.equal(retry.booking.id, first.booking.id);
+  assert.equal(Object.hasOwn(mission.purchasesByKey, "ambiguous-client-retry"), false);
   assert.equal(Object.values(mission.purchasesByKey).every((booking) => booking.id === first.booking.id), true);
 });
 
 test("oversized idempotency keys are rejected before execution", () => {
   const mission = createMission();
   assert.throws(() => purchase(mission, "x".repeat(81)), /bounded idempotency key/);
+});
+
+test("prototype property names cannot masquerade as idempotent bookings", () => {
+  const mission = createMission();
+  mission.offers = searchOffers(mission);
+  mission.selectedOfferId = mission.offers[0].id;
+  mission.quoteVersion = 1;
+  authorizeSelectedOffer(mission);
+  assert.throws(() => purchase(mission, "__proto__"), /bounded idempotency key/);
+  const result = purchase(mission, "constructor");
+  assert.equal(result.replayed, false);
+  assert.equal(Object.hasOwn(mission.purchasesByKey, "constructor"), true);
 });
 
 test("supplier instructions cannot change policy evaluation inputs", () => {

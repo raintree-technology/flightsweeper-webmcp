@@ -6,7 +6,7 @@ Complete one sandbox flight purchase that satisfies the active human-authored mi
 
 ## Authority boundary
 
-The human controls route, departure date, arrival deadline, cabin, connections, refundability, purchase cap, confirmation mode, expiration, and revocation. A browser agent may read the mission, search sandbox inventory, compare visible offers, select and refresh an offer, request policy evaluation, execute an authorized autonomous purchase, retrieve the receipt, revoke authority, or narrow supported policy fields.
+The human controls route, departure date, arrival deadline, cabin, connections, refundability, purchase cap, confirmation mode, and revocation. FlightSweeper time-bounds each saved mandate to 24 hours; the human can issue a new window by saving the mandate again. A browser agent may read the mission, search sandbox inventory, compare visible offers, select and refresh an offer, request policy evaluation, execute an authorized autonomous purchase, retrieve the receipt, revoke authority, or narrow supported policy fields.
 
 An agent cannot expand authority. Tool inputs cannot supply prices, passenger identity, payment details, policy versions, quote versions, authorization results, or claims of human confirmation. Application state is authoritative.
 
@@ -22,6 +22,7 @@ A first purchase succeeds only when:
 - route, date, arrival, cabin, stops, refundability, currency, and total price satisfy the stored policy;
 - the selected offer has been refreshed;
 - policy evaluation authorizes the current policy and quote versions;
+- the authorization receipt matches the selected offer, price, currency, policy version, and quote version;
 - confirmation mode is autonomous for WebMCP execution;
 - the idempotency key is present and no longer than 80 characters.
 

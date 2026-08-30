@@ -83,13 +83,16 @@ await document.modelContext.registerTool({
   name: contract.name,
   description: contract.description,
   inputSchema: contract.inputSchema,
+  outputSchema: contract.outputSchema,
   annotations: {
     readOnlyHint: contract.readOnlyHint,
     untrustedContentHint: contract.untrustedContentHint,
   },
   async execute(rawInput) {
     return toolResult(
-      await toolExecutors[contract.name](normalizeInput(rawInput)),
+      await toolExecutors[contract.name](
+        validateToolInput(contract, normalizeInput(rawInput)),
+      ),
     );
   },
 }, { signal: toolController.signal });
@@ -116,6 +119,8 @@ Every purchase is re-evaluated from stored mission and offer state. Tool callers
 - Quote selection and authorization evidence are cleared whenever the mission changes.
 - Supplier-backed outputs use `untrustedContentHint`.
 - Price, itinerary, policy, expiry, and authority are reloaded from application state at execution.
+- Purchase requires authorization evidence bound to the selected offer, policy version, quote version, price, and currency.
+- Expired authority removes consequential tools; saving the human mandate issues a new 24-hour authority window.
 - Idempotency records and transaction receipts survive page reloads.
 - Revocation blocks future purchases but does not erase prior evidence.
 

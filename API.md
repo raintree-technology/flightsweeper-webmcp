@@ -57,7 +57,7 @@ Expected result: HTTP `200` with four tools. Each tool is read-only, accepts an 
 | --- | --- |
 | `get_challenge_capabilities` | Challenge mode, interface counts, transaction boundary, and canonical URL |
 | `get_flight_tool_contracts` | The bounded browser-local WebMCP contracts and lifecycle rule |
-| `get_sandbox_inventory` | Synthetic route and supplier-connectivity boundary |
+| `get_sandbox_inventory` | Synthetic route-generation and supplier-connectivity boundary |
 | `get_safety_model` | Authority, policy, repeat-safety, revocation, and privacy rules |
 
 Every remote tool accepts an empty object, rejects unknown fields, is marked read-only, and returns a closed structured-output schema. Calls are safe to retry because they do not mutate server or browser state.

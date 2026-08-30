@@ -1,6 +1,7 @@
-import { createDecisionReceipt, createMission, describeRuleEvidence, evaluateOffer, purchase, replaceMissionPolicy, searchOffers, tightenMission } from "./engine.js";
+import { createDecisionReceipt, createMission, describeRuleEvidence, evaluateOffer, evaluatedOffers, hasActiveAuthority, purchase, replaceMissionPolicy, searchOffers, tightenMission } from "./engine.js";
 import { createAppState, parseStoredState, replaceCurrentMission, serializeState, STORAGE_KEY } from "./state.js";
-import { activeToolNames, toolContracts } from "./tool-contracts.js";
+import { activeToolNames, toolContracts, validateToolInput } from "./tool-contracts.js";
+import { displayOfferLocalTime } from "./time.js";
 
 const stored = parseStoredState(localStorage.getItem(STORAGE_KEY));
 const state = stored ?? createAppState();
@@ -27,7 +28,7 @@ function displayDate(value) {
 }
 
 function displayTime(value) {
-  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(value));
+  return displayOfferLocalTime(value);
 }
 
 function setMixedValue(node, parts) {
@@ -107,10 +108,12 @@ function validateMissionForm() {
 
 function activity(actor, title, detail) {
   state.activity.unshift({ id: `activity_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, actor, title, detail, createdAt: new Date().toISOString() });
+  state.activity.length = Math.min(state.activity.length, 200);
 }
 
 function addReceipt(receipt) {
   if (!state.receipts.some((item) => item.id === receipt.id)) state.receipts.unshift(receipt);
+  state.receipts.length = Math.min(state.receipts.length, 200);
 }
 
 function publicMission() {
@@ -148,10 +151,12 @@ function renderMandate() {
   document.querySelector("#connection-limit").textContent = mission.maxStops === 0 ? "Nonstop only" : `${mission.maxStops} maximum`;
   document.querySelector("#fare-rule").textContent = mission.refundableOnly ? "Fully refundable" : "Any disclosed fare";
   setMixedValue(document.querySelector("#purchase-limit"), [{ text: money(mission.maxTotalCents), numeric: true }, { text: ` ${mission.currency}` }]);
-  nodes.authorityStatus.textContent = mission.authority === "active" ? "Active" : "Revoked";
-  nodes.authorityStatus.className = `status-pill ${mission.authority === "active" ? "active" : "revoked"}`;
-  nodes.tighten.disabled = mission.maxStops === 0 || mission.authority !== "active";
-  nodes.revoke.disabled = mission.authority !== "active";
+  const authorityUsable = hasActiveAuthority(mission);
+  const authorityLabel = mission.authority === "revoked" ? "Revoked" : authorityUsable ? "Active" : "Expired";
+  nodes.authorityStatus.textContent = authorityLabel;
+  nodes.authorityStatus.className = `status-pill ${authorityUsable ? "active" : "revoked"}`;
+  nodes.tighten.disabled = mission.maxStops === 0 || !authorityUsable;
+  nodes.revoke.disabled = !authorityUsable;
 }
 
 function renderActivity() {
@@ -282,10 +287,11 @@ function renderCurrentReceipt() {
 
 function renderControls() {
   const eligible = mission.offers.filter((offer) => evaluateOffer(mission, offer).decision === "authorized");
-  nodes.search.disabled = mission.authority !== "active" || mission.status === "ticketed";
-  nodes.selectBest.disabled = eligible.length === 0 || mission.authority !== "active" || mission.status === "ticketed";
-  nodes.evaluate.disabled = !mission.selectedOfferId || mission.authority !== "active" || mission.status === "ticketed";
-  nodes.purchase.disabled = mission.status !== "authorized";
+  const authorityUsable = hasActiveAuthority(mission);
+  nodes.search.disabled = !authorityUsable || mission.status === "ticketed";
+  nodes.selectBest.disabled = eligible.length === 0 || !authorityUsable || mission.status === "ticketed";
+  nodes.evaluate.disabled = !mission.selectedOfferId || !authorityUsable || mission.status === "ticketed";
+  nodes.purchase.disabled = mission.status !== "authorized" || !authorityUsable;
   const purchaseStep = document.createElement("span");
   purchaseStep.textContent = "4";
   nodes.purchase.replaceChildren(purchaseStep, mission.confirmationMode === "autonomous" ? " Purchase" : " Review purchase");
@@ -300,8 +306,10 @@ function renderControls() {
     ticketed: ["Sandbox transaction complete", "Inspect the durable receipt below."],
     authority_revoked: ["Purchase authority revoked", "Create or replace the mission to continue."],
   };
-  [nodes.nextActionTitle.textContent, nodes.nextActionDetail.textContent] = nextActions[mission.status] ?? nextActions.ready;
-  nodes.missionStatus.textContent = labels[mission.status] ?? mission.status;
+  const displayStatus = mission.authority === "active" && !authorityUsable && !mission.booking ? "authority_expired" : mission.status;
+  const expiredAction = ["Purchase authority expired", "Save the human mandate to issue a new 24-hour authority window."];
+  [nodes.nextActionTitle.textContent, nodes.nextActionDetail.textContent] = displayStatus === "authority_expired" ? expiredAction : nextActions[mission.status] ?? nextActions.ready;
+  nodes.missionStatus.textContent = displayStatus === "authority_expired" ? "Expired" : labels[mission.status] ?? mission.status;
 }
 
 function render() {
@@ -319,7 +327,7 @@ function search(actor = "agent") {
   Object.assign(mission, { status: "offers_ready", selectedOfferId: null, quoteVersion: 0, evaluatedDecision: null, decisionReceipt: null });
   activity(actor, "Search completed", `${mission.offers.length} exact-date offers returned from the challenge sandbox.`);
   afterMutation();
-  return { missionId: mission.id, offers: mission.offers.map((offer) => ({ ...offer, evaluation: evaluateOffer(mission, offer) })) };
+  return { missionId: mission.id, offers: evaluatedOffers(mission) };
 }
 
 function tighten(changes, actor = "agent") {
@@ -360,7 +368,7 @@ function evaluateSelected(actor = "policy_engine") {
 }
 
 function purchaseSelected(idempotencyKey = "manual-demo-purchase", actor = "agent", humanConfirmed = false) {
-  if (mission.purchasesByKey[idempotencyKey]) {
+  if (Object.hasOwn(mission.purchasesByKey, idempotencyKey)) {
     const replay = purchase(mission, idempotencyKey);
     activity("policy_engine", "Duplicate safely resolved", "The idempotency key returned the original booking without another purchase.");
     afterMutation();
@@ -397,7 +405,7 @@ function handleError(error, actor = "application") {
 
 const toolExecutors = {
   read_flight_mission: () => publicMission(), search_flights: () => search("agent"), tighten_flight_mission: (changes) => tighten(changes, "agent"),
-  compare_visible_offers: () => mission.offers.map((offer) => ({ offer, evaluation: evaluateOffer(mission, offer) })),
+  compare_visible_offers: () => evaluatedOffers(mission),
   select_offer: ({ offerId }) => selectOffer(offerId, "agent"), refresh_selected_offer: () => refreshSelected("agent"), evaluate_purchase: () => evaluateSelected("policy_engine"),
   purchase_selected_offer: ({ idempotencyKey }) => purchaseSelected(idempotencyKey, "agent"), get_booking_receipt: () => mission.booking ?? { status: "not_booked" },
   revoke_purchase_authority: () => revoke("agent"),
@@ -405,10 +413,10 @@ const toolExecutors = {
 
 function toolError(error) {
   const message = error instanceof Error ? error.message : "The tool could not complete the action.";
-  const code = /valid JSON/i.test(message) ? "invalid_input"
+  const code = /valid JSON|Invalid tool input/i.test(message) ? "invalid_input"
     : /not visible|Select an offer|No offer|No valid mission/i.test(message) ? "invalid_state"
       : /denied|authority|cannot|requires human confirmation/i.test(message) ? "policy_blocked"
-        : /Refresh/i.test(message) ? "quote_stale"
+        : /Refresh|Evaluate the current policy/i.test(message) ? "quote_stale"
           : "tool_failed";
   return { code, message, retryable: code === "quote_stale", nextAction: code === "quote_stale" ? "Refresh the selected offer, evaluate it again, then retry." : "Read the active mission and use a tool available for its current state." };
 }
@@ -439,7 +447,7 @@ async function syncWebMcpTools() {
       annotations: { readOnlyHint: contract.readOnlyHint, untrustedContentHint: contract.untrustedContentHint },
       async execute(rawInput) {
         activeToolExecutions += 1;
-        try { return toolResult(await toolExecutors[contract.name](normalizeInput(rawInput))); }
+        try { return toolResult(await toolExecutors[contract.name](validateToolInput(contract, normalizeInput(rawInput)))); }
         catch (error) { return toolResult(error, true); }
         finally {
           activeToolExecutions -= 1;

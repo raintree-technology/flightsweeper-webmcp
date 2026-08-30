@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { z } from "zod";
-import { createMission } from "./engine.js";
-import { activeToolNames, toolContracts } from "./tool-contracts.js";
+import { createMission, evaluatedOffers, searchOffers } from "./engine.js";
+import { activeToolNames, toolContracts, validateToolInput } from "./tool-contracts.js";
 
 test("tool names are unique and use bounded schemas", () => {
   assert.equal(new Set(toolContracts.map((tool) => tool.name)).size, toolContracts.length);
@@ -21,8 +21,26 @@ test("caller-provided identifiers and quantities have explicit limits", () => {
   const byName = Object.fromEntries(toolContracts.map((tool) => [tool.name, tool]));
   assert.equal(byName.select_offer.inputSchema.properties.offerId.maxLength, 80);
   assert.equal(byName.purchase_selected_offer.inputSchema.properties.idempotencyKey.maxLength, 80);
+  assert.match(byName.purchase_selected_offer.inputSchema.properties.idempotencyKey.pattern, /A-Za-z0-9/);
   assert.equal(byName.tighten_flight_mission.inputSchema.properties.maxTotalCents.maximum, 500000);
   assert.equal(byName.tighten_flight_mission.inputSchema.properties.maxStops.maximum, 2);
+});
+
+test("browser tool inputs are validated again at the application boundary", () => {
+  const byName = Object.fromEntries(toolContracts.map((tool) => [tool.name, tool]));
+  assert.deepEqual(validateToolInput(byName.select_offer, { offerId: "off_coast_684" }), { offerId: "off_coast_684" });
+  assert.throws(() => validateToolInput(byName.select_offer, { offerId: "off_coast_684", price: 1 }), /not allowed/);
+  assert.throws(() => validateToolInput(byName.tighten_flight_mission, { maxStops: "0" }), /must be an integer/);
+  assert.throws(() => validateToolInput(byName.purchase_selected_offer, { idempotencyKey: "__proto__" }), /invalid format/);
+});
+
+test("decision evidence publishes exact stored and offered contracts", () => {
+  const readMission = toolContracts.find(({ name }) => name === "read_flight_mission");
+  const booking = readMission.outputSchema.oneOf[0].properties.booking.anyOf[0];
+  const evidence = booking.properties.authorizationReceipt.properties.evidence;
+  assert.equal(evidence.properties.price.properties.stored.additionalProperties, false);
+  assert.equal(evidence.properties.cabin.properties.stored.items.enum.includes("premium_economy"), true);
+  assert.equal(evidence.properties.authority.properties.offered.enum.includes("expired"), true);
 });
 
 test("state-changing and financial tools are not marked read-only", () => {
@@ -57,6 +75,19 @@ test("tool exposure follows transaction state", () => {
   assert.deepEqual(new Set(activeToolNames(mission)), new Set(["read_flight_mission", "revoke_purchase_authority", "purchase_selected_offer", "get_booking_receipt"]));
   mission.authority = "revoked";
   assert.deepEqual(new Set(activeToolNames(mission)), new Set(["read_flight_mission", "purchase_selected_offer", "get_booking_receipt"]));
+});
+
+test("expired authority removes consequential tools even when status is stale", () => {
+  const mission = createMission({ status: "authorized", expiresAt: "2020-01-01T00:00:00.000Z" });
+  assert.deepEqual(activeToolNames(mission, new Date("2026-01-01T00:00:00.000Z")), ["read_flight_mission"]);
+});
+
+test("search results satisfy the published structured output contract", () => {
+  const mission = createMission();
+  mission.offers = searchOffers(mission);
+  const contract = toolContracts.find(({ name }) => name === "search_flights");
+  const output = { missionId: mission.id, offers: evaluatedOffers(mission) };
+  assert.doesNotThrow(() => z.fromJSONSchema(contract.outputSchema).parse(output));
 });
 
 test("the clean-state lifecycle makes every declared browser tool reachable", () => {

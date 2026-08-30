@@ -9,8 +9,21 @@ const nullable = (schema) => ({ anyOf: [schema, { type: "null" }] });
 const ruleNames = ["route", "date", "arrival", "cabin", "stops", "refundability", "price", "authority"];
 const ruleName = { type: "string", enum: ruleNames };
 const checksSchema = closedObject(Object.fromEntries(ruleNames.map((name) => [name, { type: "boolean" }])));
-const evidenceRecordSchema = closedObject({ stored: {}, offered: {} });
-const evidenceSchema = closedObject(Object.fromEntries(ruleNames.map((name) => [name, evidenceRecordSchema])));
+const airportRoute = { type: "string", pattern: "^[A-Z]{3}-[A-Z]{3}$" };
+const date = { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" };
+const clockTime = { type: "string", pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" };
+const cabin = { type: "string", enum: ["economy", "premium_economy"] };
+const moneyEvidence = closedObject({ cents: { type: "integer", minimum: 0, maximum: 500000 }, currency: { const: "USD" } });
+const evidenceSchema = closedObject({
+  route: closedObject({ stored: airportRoute, offered: airportRoute }),
+  date: closedObject({ stored: date, offered: date }),
+  arrival: closedObject({ stored: clockTime, offered: clockTime }),
+  cabin: closedObject({ stored: { type: "array", items: cabin, minItems: 1, maxItems: 2, uniqueItems: true }, offered: cabin }),
+  stops: closedObject({ stored: { type: "integer", minimum: 0, maximum: 2 }, offered: { type: "integer", minimum: 0, maximum: 2 } }),
+  refundability: closedObject({ stored: { type: "boolean" }, offered: { type: "boolean" } }),
+  price: closedObject({ stored: moneyEvidence, offered: moneyEvidence }),
+  authority: closedObject({ stored: { type: "string", enum: ["active", "revoked"] }, offered: { type: "string", enum: ["unexpired", "expired"] } }),
+});
 const evaluationSchema = closedObject({
   decision: { type: "string", enum: ["authorized", "denied"] },
   checks: checksSchema,
@@ -168,7 +181,7 @@ export const toolContracts = Object.freeze([
     description: "Issue one sandbox ticket for the selected, refreshed, authorized offer, or return the original ticket when the mission is already booked. Requires an idempotency key. Never creates a real charge or airline order.",
     inputSchema: {
       type: "object",
-      properties: { idempotencyKey: { type: "string", minLength: 1, maxLength: 80 } },
+      properties: { idempotencyKey: { type: "string", minLength: 1, maxLength: 80, pattern: "^[A-Za-z0-9][A-Za-z0-9.:-]{0,79}$" } },
       required: ["idempotencyKey"],
       additionalProperties: false,
     },
@@ -194,23 +207,61 @@ export const toolContracts = Object.freeze([
   },
 ]);
 
-export function activeToolNames(mission) {
+function validateSchemaValue(schema, value, path) {
+  if (schema.type === "object") {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`Invalid tool input: ${path} must be an object.`);
+    const properties = schema.properties ?? {};
+    for (const name of schema.required ?? []) {
+      if (!Object.hasOwn(value, name)) throw new Error(`Invalid tool input: ${path}.${name} is required.`);
+    }
+    if (schema.additionalProperties === false) {
+      const unexpected = Object.keys(value).find((name) => !Object.hasOwn(properties, name));
+      if (unexpected) throw new Error(`Invalid tool input: ${path}.${unexpected} is not allowed.`);
+    }
+    for (const [name, child] of Object.entries(properties)) {
+      if (Object.hasOwn(value, name)) validateSchemaValue(child, value[name], `${path}.${name}`);
+    }
+    return;
+  }
+  if (schema.type === "integer") {
+    if (!Number.isInteger(value)) throw new Error(`Invalid tool input: ${path} must be an integer.`);
+    if (schema.minimum !== undefined && value < schema.minimum) throw new Error(`Invalid tool input: ${path} is below its minimum.`);
+    if (schema.maximum !== undefined && value > schema.maximum) throw new Error(`Invalid tool input: ${path} exceeds its maximum.`);
+    return;
+  }
+  if (schema.type === "string") {
+    if (typeof value !== "string") throw new Error(`Invalid tool input: ${path} must be a string.`);
+    if (schema.minLength !== undefined && value.length < schema.minLength) throw new Error(`Invalid tool input: ${path} is too short.`);
+    if (schema.maxLength !== undefined && value.length > schema.maxLength) throw new Error(`Invalid tool input: ${path} is too long.`);
+    if (schema.pattern && !new RegExp(schema.pattern).test(value)) throw new Error(`Invalid tool input: ${path} has an invalid format.`);
+    return;
+  }
+  if (schema.type === "boolean" && typeof value !== "boolean") throw new Error(`Invalid tool input: ${path} must be a boolean.`);
+}
+
+export function validateToolInput(contract, input) {
+  validateSchemaValue(contract.inputSchema, input, contract.name);
+  return input;
+}
+
+export function activeToolNames(mission, now = new Date()) {
   const names = new Set(["read_flight_mission"]);
-  if (mission.authority === "active") {
+  const authorityUsable = mission.authority === "active" && Number.isFinite(Date.parse(mission.expiresAt)) && new Date(mission.expiresAt) > now;
+  if (authorityUsable) {
     names.add("revoke_purchase_authority");
     if (!mission.booking) names.add("tighten_flight_mission");
   }
-  if (mission.status === "ready") names.add("search_flights");
-  if (["offers_ready", "offer_selected", "quote_refreshed", "authorized", "denied"].includes(mission.status)) {
+  if (authorityUsable && mission.status === "ready") names.add("search_flights");
+  if (authorityUsable && ["offers_ready", "offer_selected", "quote_refreshed", "authorized", "denied"].includes(mission.status)) {
     names.add("search_flights");
     names.add("compare_visible_offers");
     names.add("select_offer");
   }
-  if (["offer_selected", "quote_refreshed", "authorized", "denied"].includes(mission.status)) {
+  if (authorityUsable && ["offer_selected", "quote_refreshed", "authorized", "denied"].includes(mission.status)) {
     names.add("refresh_selected_offer");
     names.add("evaluate_purchase");
   }
-  if (mission.status === "authorized" && mission.confirmationMode === "autonomous") names.add("purchase_selected_offer");
+  if (authorityUsable && mission.status === "authorized" && mission.confirmationMode === "autonomous") names.add("purchase_selected_offer");
   if (mission.booking) {
     names.add("get_booking_receipt");
     names.add("purchase_selected_offer");

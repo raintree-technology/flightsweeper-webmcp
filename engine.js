@@ -8,12 +8,28 @@ function id(prefix) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function expiresInHours(hours, now = new Date()) {
+  const value = new Date(now);
+  value.setUTCHours(value.getUTCHours() + hours);
+  return value.toISOString();
+}
+
+export function createIdempotencyStore(entries = {}) {
+  return Object.assign(Object.create(null), entries);
+}
+
 function assertAirport(value, label) {
   if (!/^[A-Z]{3}$/.test(value)) throw new Error(`${label} must be a three-letter airport code.`);
 }
 
 function assertTime(value) {
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) throw new Error("Arrival time must use HH:MM.");
+}
+
+function assertDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error("Departure date is invalid.");
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) throw new Error("Departure date is invalid.");
 }
 
 function minutes(value) {
@@ -31,13 +47,11 @@ export function sandboxOffersFor(mission) {
 }
 
 export function createMission(overrides = {}) {
-  const expiresAt = new Date();
-  expiresAt.setUTCHours(expiresAt.getUTCHours() + 24);
   const mission = {
     id: id("mission"), status: "ready", origin: "LAX", destination: "JFK", departureDate: dateAfter(14), arriveBefore: "19:00",
     permittedCabins: ["economy", "premium_economy"], maxStops: 1, refundableOnly: true, maxTotalCents: 90000, currency: "USD",
-    confirmationMode: "autonomous", expiresAt: expiresAt.toISOString(), authority: "active", policyVersion: 1, offers: [],
-    selectedOfferId: null, quoteVersion: 0, evaluatedDecision: null, decisionReceipt: null, booking: null, purchasesByKey: {},
+    confirmationMode: "autonomous", expiresAt: expiresInHours(24), authority: "active", policyVersion: 1, offers: [],
+    selectedOfferId: null, quoteVersion: 0, evaluatedDecision: null, decisionReceipt: null, booking: null, purchasesByKey: createIdempotencyStore(),
     createdAt: new Date().toISOString(), ...overrides,
   };
   validateHumanPolicy(mission);
@@ -48,9 +62,11 @@ function validateHumanPolicy(policy) {
   assertAirport(policy.origin, "Origin");
   assertAirport(policy.destination, "Destination");
   if (policy.origin === policy.destination) throw new Error("Origin and destination must differ.");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(policy.departureDate)) throw new Error("Departure date is invalid.");
+  assertDate(policy.departureDate);
   assertTime(policy.arriveBefore);
-  if (!Array.isArray(policy.permittedCabins) || policy.permittedCabins.length === 0) throw new Error("Select at least one cabin.");
+  if (!Array.isArray(policy.permittedCabins) || policy.permittedCabins.length === 0 || policy.permittedCabins.length > 2
+    || new Set(policy.permittedCabins).size !== policy.permittedCabins.length
+    || policy.permittedCabins.some((cabin) => !["economy", "premium_economy"].includes(cabin))) throw new Error("Select a valid cabin policy.");
   if (![0, 1, 2].includes(policy.maxStops)) throw new Error("Connections must be between zero and two.");
   if (!Number.isInteger(policy.maxTotalCents) || policy.maxTotalCents < 10000 || policy.maxTotalCents > 500000) throw new Error("Purchase limit must be between $100 and $5,000.");
   if (!["autonomous", "confirm_before_purchase"].includes(policy.confirmationMode)) throw new Error("Confirmation mode is invalid.");
@@ -58,12 +74,20 @@ function validateHumanPolicy(policy) {
 
 export function replaceMissionPolicy(mission, changes) {
   validateHumanPolicy({ ...mission, ...changes });
-  Object.assign(mission, changes, { policyVersion: mission.policyVersion + 1, status: "ready", authority: "active", offers: [], selectedOfferId: null, quoteVersion: 0, evaluatedDecision: null, decisionReceipt: null, booking: null, purchasesByKey: {} });
+  Object.assign(mission, changes, { policyVersion: mission.policyVersion + 1, status: "ready", authority: "active", expiresAt: expiresInHours(24), offers: [], selectedOfferId: null, quoteVersion: 0, evaluatedDecision: null, decisionReceipt: null, booking: null, purchasesByKey: createIdempotencyStore() });
   return mission;
 }
 
 export function searchOffers(mission) {
   return sandboxOffersFor(mission);
+}
+
+export function evaluatedOffers(mission, now = new Date()) {
+  return mission.offers.map((offer) => ({ offer, evaluation: evaluateOffer(mission, offer, now) }));
+}
+
+export function hasActiveAuthority(mission, now = new Date()) {
+  return mission.authority === "active" && Number.isFinite(Date.parse(mission.expiresAt)) && new Date(mission.expiresAt) > now;
 }
 
 export function evaluateOffer(mission, offer, now = new Date()) {
@@ -76,7 +100,7 @@ export function evaluateOffer(mission, offer, now = new Date()) {
     stops: offer.stops <= mission.maxStops,
     refundability: !mission.refundableOnly || offer.refundable,
     price: offer.currency === mission.currency && offer.totalCents <= mission.maxTotalCents,
-    authority: mission.authority === "active" && new Date(mission.expiresAt) > now,
+    authority: hasActiveAuthority(mission, now),
   };
   const evidence = {
     route: { stored: `${mission.origin}-${mission.destination}`, offered: `${offer.origin}-${offer.destination}` },
@@ -133,11 +157,9 @@ export function tightenMission(mission, changes) {
 }
 
 export function purchase(mission, idempotencyKey, { humanConfirmed = false } = {}) {
-  if (!idempotencyKey || idempotencyKey.length > 80) throw new Error("A bounded idempotency key is required.");
-  const existing = mission.purchasesByKey[idempotencyKey];
-  if (existing) return { booking: existing, replayed: true };
+  if (!/^[A-Za-z0-9][A-Za-z0-9.:-]{0,79}$/.test(idempotencyKey ?? "")) throw new Error("A bounded idempotency key is required.");
+  if (Object.hasOwn(mission.purchasesByKey, idempotencyKey)) return { booking: mission.purchasesByKey[idempotencyKey], replayed: true };
   if (mission.booking) {
-    mission.purchasesByKey[idempotencyKey] = mission.booking;
     return { booking: mission.booking, replayed: true };
   }
   const offer = mission.offers.find((candidate) => candidate.id === mission.selectedOfferId);
@@ -145,8 +167,24 @@ export function purchase(mission, idempotencyKey, { humanConfirmed = false } = {
   const evaluation = evaluateOffer(mission, offer);
   if (evaluation.decision !== "authorized") { const error = new Error("Purchase denied by the active mandate."); error.evaluation = evaluation; throw error; }
   if (mission.quoteVersion < 1) throw new Error("Refresh the selected offer before purchase.");
+  const storedEvaluation = mission.evaluatedDecision;
+  const receipt = mission.decisionReceipt;
+  const authorizationIsCurrent = mission.status === "authorized"
+    && storedEvaluation?.decision === "authorized"
+    && receipt?.decision === "authorized"
+    && storedEvaluation.offerId === offer.id
+    && receipt.offerId === offer.id
+    && storedEvaluation.policyVersion === mission.policyVersion
+    && receipt.policyVersion === mission.policyVersion
+    && storedEvaluation.quoteVersion === mission.quoteVersion
+    && receipt.quoteVersion === mission.quoteVersion
+    && storedEvaluation.totalCents === offer.totalCents
+    && storedEvaluation.currency === offer.currency
+    && receipt.evidence?.price?.offered?.cents === offer.totalCents
+    && receipt.evidence?.price?.offered?.currency === offer.currency;
+  if (!authorizationIsCurrent) throw new Error("Evaluate the current policy and refreshed quote before purchase.");
   if (mission.confirmationMode !== "autonomous" && !humanConfirmed) throw new Error("The active mission requires human confirmation before purchase.");
-  const booking = { id: id("ord_sandbox"), status: "ticketed", offerId: offer.id, totalCents: offer.totalCents, currency: offer.currency, ticketNumber: `999-${String(Date.now()).slice(-10)}`, supplierReference: "WEBMCP", sandbox: true, authorizationReceipt: mission.decisionReceipt ?? createDecisionReceipt(mission, offer, evaluation), createdAt: new Date().toISOString() };
+  const booking = { id: id("ord_sandbox"), status: "ticketed", offerId: offer.id, totalCents: offer.totalCents, currency: offer.currency, ticketNumber: `999-${String(Date.now()).slice(-10)}`, supplierReference: "WEBMCP", sandbox: true, authorizationReceipt: receipt, createdAt: new Date().toISOString() };
   mission.booking = booking;
   mission.status = "ticketed";
   mission.purchasesByKey[idempotencyKey] = booking;
