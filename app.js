@@ -7,9 +7,7 @@ const stored = parseStoredState(localStorage.getItem(STORAGE_KEY));
 const state = stored ?? createAppState();
 let mission = state.mission;
 let toolController = null;
-let toolSync = Promise.resolve();
-let activeToolExecutions = 0;
-let toolSyncPending = false;
+let toolRegistrationStarted = false;
 
 const nodes = {
   timeline: document.querySelector("#timeline"), offers: document.querySelector("#offers"), offersEmpty: document.querySelector("#offers-empty"), offerCount: document.querySelector("#offer-count"),
@@ -319,7 +317,6 @@ function render() {
 function afterMutation() {
   persist();
   render();
-  scheduleToolSync();
 }
 
 function search(actor = "agent") {
@@ -451,28 +448,30 @@ async function syncWebMcpTools() {
     nodes.webMcpStatus.classList.add("unavailable");
     return;
   }
-  toolController?.abort();
-  toolController = new AbortController();
-  for (const contract of toolContracts) {
-    await document.modelContext.registerTool({
-      name: contract.name, description: contract.description, inputSchema: contract.inputSchema, outputSchema: contract.outputSchema,
-      annotations: { readOnlyHint: contract.readOnlyHint, untrustedContentHint: contract.untrustedContentHint },
-      async execute(rawInput) {
-        activeToolExecutions += 1;
-        try {
-          assertToolIsValid(contract.name);
-          return toolResult(await toolExecutors[contract.name](validateToolInput(contract, normalizeInput(rawInput))));
-        }
-        catch (error) { return toolResult(error, true); }
-        finally {
-          activeToolExecutions -= 1;
-          if (activeToolExecutions === 0 && toolSyncPending) {
-            toolSyncPending = false;
-            setTimeout(scheduleToolSync, 0);
+  if (toolRegistrationStarted) return;
+  toolRegistrationStarted = true;
+  const controller = new AbortController();
+  toolController = controller;
+  try {
+    for (const contract of toolContracts) {
+      await document.modelContext.registerTool({
+        name: contract.name, description: contract.description, inputSchema: contract.inputSchema, outputSchema: contract.outputSchema,
+        annotations: { readOnlyHint: contract.readOnlyHint, untrustedContentHint: contract.untrustedContentHint },
+        async execute(rawInput) {
+          try {
+            assertToolIsValid(contract.name);
+            return toolResult(await toolExecutors[contract.name](validateToolInput(contract, normalizeInput(rawInput))));
+          } catch (error) {
+            return toolResult(error, true);
           }
-        }
-      },
-    }, { signal: toolController.signal });
+        },
+      }, { signal: controller.signal });
+    }
+  } catch (error) {
+    controller.abort();
+    if (toolController === controller) toolController = null;
+    toolRegistrationStarted = false;
+    throw error;
   }
   nodes.webMcpStatusTitle.textContent = "WebMCP connected";
   nodes.webMcpStatusDetail.textContent = `${toolContracts.length} tools are discoverable. FlightSweeper enforces valid next actions for the current mission state.`;
@@ -481,11 +480,7 @@ async function syncWebMcpTools() {
 }
 
 function scheduleToolSync() {
-  if (activeToolExecutions > 0) {
-    toolSyncPending = true;
-    return;
-  }
-  toolSync = toolSync.then(() => new Promise((resolve) => queueMicrotask(resolve))).then(syncWebMcpTools).catch((error) => {
+  syncWebMcpTools().catch((error) => {
     nodes.webMcpStatusTitle.textContent = "WebMCP registration failed";
     nodes.webMcpStatusDetail.textContent = "Use the manual sandbox controls while the browser connection is unavailable.";
     nodes.webMcpStatus.classList.add("unavailable");

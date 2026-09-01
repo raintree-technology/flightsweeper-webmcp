@@ -171,7 +171,7 @@ The accessibility target for the challenge is WCAG 2.2 Level AA in current ChatG
 
 ## Raintree open-source relationship
 
-Raintree Technology publishes this MIT-licensed repository as a self-contained FlightSweeper demonstration. The repository excludes private production code and services. It applies the relevant profiles from Raintree's standards library. [STANDARDS.md](STANDARDS.md) records the evidence, limits, and remaining manual checks. This record is not a certification claim.
+Raintree Technology publishes this MIT-licensed repository as a self-contained FlightSweeper demonstration. The repository excludes private production code and services. It applies relevant profiles from the public [Raintree Standards](https://github.com/raintree-technology/raintree.standards) catalog. [STANDARDS.md](STANDARDS.md) records the applicable rule IDs, evidence, exceptions, limits, and remaining manual checks. This record is not a certification claim.
 
 ## Creator
 

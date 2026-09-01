@@ -130,6 +130,16 @@ test("the browser entrypoint uses the required WebMCP API", () => {
   assert.match(source, /assertToolIsValid/);
 });
 
+test("browser tools register once and keep state-aware handlers for the page lifetime", () => {
+  const source = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  const afterMutation = source.match(/function afterMutation\(\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+  assert.doesNotMatch(afterMutation, /scheduleToolSync|syncWebMcpTools/);
+  assert.match(source, /if \(toolRegistrationStarted\) return;/);
+  assert.match(source, /toolRegistrationStarted = true;/);
+  assert.match(source, /assertToolIsValid\(contract\.name\)/);
+  assert.doesNotMatch(source, /toolController\?\.abort\(\)/);
+});
+
 test("provider content is rendered without HTML injection sinks", () => {
   const source = readFileSync(new URL("./app.js", import.meta.url), "utf8");
   assert.doesNotMatch(source, /\.innerHTML\s*=/);
